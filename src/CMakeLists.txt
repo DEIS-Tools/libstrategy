@@ -3,8 +3,6 @@ project(z2s C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(nlohmann_json 3.2.0 REQUIRED)
-find_package(ptrie 1.0.0 REQUIRED)
 find_package(Boost 1.66 COMPONENTS program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
