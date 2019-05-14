@@ -1,0 +1,1 @@
+/home/petko/Devel/ptrie/src/binarywrapper.h
