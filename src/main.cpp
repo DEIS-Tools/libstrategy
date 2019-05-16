@@ -69,7 +69,8 @@ int main(int argc, char **argv) {
     }
     auto learned_strategy = SimpleTree::parse(lstream);
     //strategy.filter(learned_strategy);
-    learned_strategy.print_c(std::cout, learned_name, split);
+    //learned_strategy.print_c(std::cout, learned_name, split);
+    learned_strategy.print(std::cout);
     return 0;
 }
 

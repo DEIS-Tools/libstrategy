@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_set>
+#include <set>
 
 #include <ptrie_map.h>
 #include <nlohmann/json.hpp>
@@ -37,6 +38,8 @@ private:
         uint32_t _var = std::numeric_limits<uint32_t>::max();
         double _limit = -std::numeric_limits<double>::infinity();
         double _cost = std::numeric_limits<double>::infinity();
+        double _mincost = std::numeric_limits<double>::infinity();
+        double _maxcost = -std::numeric_limits<double>::infinity();
         std::shared_ptr<node_t> _low;
         std::shared_ptr<node_t> _high;
         node_t* _parent;
@@ -44,8 +47,15 @@ private:
         std::ostream& print(std::ostream& out, size_t tabs = 0) const;
         bool is_leaf() const;
         std::shared_ptr<node_t> simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap);
+        void subsumption_reduction(bool minimization, SimpleTree& parent);
+        void action_nodes(std::vector<std::shared_ptr<node_t>>& nodes, uint32_t low, uint32_t high, uint32_t varid);
+        std::pair<double,double> compute_min_max();
+        void check_tiles(node_t* start, std::vector<std::shared_ptr<node_t>>& , std::vector<std::pair<double,double>>& bounds, double val, bool minimization, size_t offset);
+        bool subsumes(std::vector<std::pair<double,double>>& bounds, double val, bool minimization, size_t offset);
+        void get_ranks(std::set<std::pair<double, node_t*>>& values, node_t* start);
+        void set_ranks(std::unordered_map<double,double>& values);
         std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<node_t*>& printed, size_t tabs = 0);
-        size_t depth() const;
+        size_t depth() const;        
         bool operator==(const node_t& other) const
         {
             if(_limit != other._limit)
