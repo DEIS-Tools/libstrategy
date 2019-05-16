@@ -95,10 +95,10 @@ SimpleTree SimpleTree::parse(std::istream& input)
             }
             auto obj = iit.value();
             tree._root->merge(key, obj, action, tree._pointvars.size(), is_minimize, tree);
-            tree._root = tree._root->simplify(true, tree._nodemap);
-        }
-        tree._root = tree._root->simplify(false, tree._nodemap);
+            tree._root = tree._root->simplify(false, tree._nodemap);
+        }        
     }
+    tree._root = tree._root->simplify(true, tree._nodemap);
     return tree;
 }
 
@@ -129,34 +129,29 @@ std::vector<double> SimpleTree::parse_key(const std::string& key) {
 void SimpleTree::node_t::merge(std::vector<double>& key, json& tree, size_t action, size_t vars, bool minimize, SimpleTree& parent) {
     
     std::vector<std::pair<double,double>> bounds;
+    bounds.emplace_back(action, action);
     for(auto k : key)
         bounds.emplace_back(k,k);
     bounds.resize(vars+key.size(), std::pair<double,double>(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
-    find_and_insert(tree, action, bounds, minimize, key.size(), parent);
+    find_and_insert(tree, bounds, minimize, key.size(), parent);
 }
 
-void SimpleTree::node_t::find_and_insert(json& tree, size_t action, std::vector<std::pair<double, double> >& bounds, bool minimize, size_t keysize, SimpleTree& parent) {
+void SimpleTree::node_t::find_and_insert(json& tree, std::vector<std::pair<double, double> >& bounds, bool minimize, size_t keysize, SimpleTree& parent) {
     if(tree.is_object())
     {
         size_t var = tree["var"].get<size_t>() + keysize;
         double ov = tree["bound"].get<double>();
         std::swap(ov, bounds[var].second);
-        find_and_insert(tree["low"], action, bounds, minimize, keysize, parent);
+        find_and_insert(tree["low"], bounds, minimize, keysize, parent);
         std::swap(ov, bounds[var].second);
         std::swap(ov, bounds[var].first);
-        find_and_insert(tree["high"], action, bounds, minimize, keysize, parent);
+        find_and_insert(tree["high"], bounds, minimize, keysize, parent);
         std::swap(ov, bounds[var].first);
     }
     else if(tree.is_number())
     {
         // do the merge
-        std::cerr << "\t\tINSERT ";
-        for(auto d : bounds)
-        {
-            std::cerr << "[" << d.first << ", " << d.second << "]";
-        }
-        std::cerr << std::endl;
-        insert(tree.get<double>(), action, bounds, minimize);
+        insert(tree.get<double>(), bounds, minimize);
     }
     else
     {
@@ -165,65 +160,62 @@ void SimpleTree::node_t::find_and_insert(json& tree, size_t action, std::vector<
     }
 }
 
-void SimpleTree::node_t::insert(double value, size_t action, std::vector<std::pair<double, double> >& bounds, bool minimize) 
+void SimpleTree::node_t::insert(double value, std::vector<std::pair<double, double> >& bounds, bool minimize) 
 {
     std::vector<std::pair<bool,bool>> handled(bounds.size());
-    rec_insert(value, action, handled, bounds, minimize);
+    rec_insert(value, handled, bounds, minimize);
 }
 
 void SimpleTree::simplify() {
     _nodemap = ptrie::map<std::shared_ptr<node_t>>();
-    _root->simplify(false, _nodemap);
+    _root->simplify(true, _nodemap);
 }
 
 
-std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool cost_consistent, ptrie::map<std::shared_ptr<node_t>>& nodemap) {
-    if(_low) _low = _low->simplify(cost_consistent, nodemap);
-    if(_high) _high = _high->simplify(cost_consistent, nodemap);
+std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap) {
+    if(_low) _low = _low->simplify(make_dd, nodemap);
+    if(_high) _high = _high->simplify(make_dd, nodemap);
     if(std::isinf(_limit) && (_low != nullptr || _high != nullptr))
     {
         return _low == nullptr ? _high : _low;
     }
     assert(_low.get() != this);
     assert(_high.get() != this);
-    if(_low && _low->is_leaf() && (_low->_cost == _cost || !cost_consistent) && _low->_action == _action) 
+    if(_low && _low->is_leaf() && _low->_cost == _cost) 
         _low = nullptr;
-    if(_high && _high->is_leaf() && (_high->_cost == _cost || !cost_consistent) && _high->_action == _action) 
+    if(_high && _high->is_leaf() && _high->_cost == _cost) 
         _high = nullptr;
-    if(!cost_consistent)
+    if( (_low == nullptr || _low->is_leaf()) &&
+        (_high == nullptr || _high->is_leaf()))
     {
-        if( (_low == nullptr || _low->is_leaf()) &&
-            (_high == nullptr || _high->is_leaf()))
+        auto lc = _low ? _low->_cost : _cost;
+        auto hc = _high ? _high->_cost : _cost;
+        if(lc == hc)
         {
-            auto lact = _low ? _low->_action : _action;
-            auto hact = _high ? _high->_action : _action;
-            if(lact == hact)
-            {
-                _low = nullptr;
-                _high = nullptr;
-                _action = lact;
-                _limit = std::numeric_limits<double>::infinity();
-            }
+            _low = nullptr;
+            _high = nullptr;
+            _cost = lc;
+            _limit = std::numeric_limits<double>::infinity();
         }
     }
-    if(_low && _parent && !cost_consistent && (_high == nullptr || (!_low->is_leaf() && _high->is_leaf())))
+    if(_low && _parent && (_high == nullptr || (!_low->is_leaf() && _high->is_leaf())))
     {
-        auto action = _high ? _high->_action : _action;
-        auto laction = _low->_high ? _low->_high->_action : _low->_action;
-        if(action == laction && _low->_var == _var)
+        auto cost = _high ? _high->_cost : _cost;
+        auto lcost = _low->_high ? _low->_high->_cost : _low->_cost;
+        if(cost == lcost && _low->_var == _var)
             return _low;
     }
-    if(_high && _parent && !cost_consistent && (_low == nullptr || (!_high->is_leaf() && _low->is_leaf())))
+    if(_high && _parent && (_low == nullptr || (!_high->is_leaf() && _low->is_leaf())))
     {
-        auto action = _low ? _low->_action : _action;
-        auto haction = _high->_low ? _high->_low->_action : _high->_action;
-        if(action == haction && _high->_var == _var)
+        auto cost = _low ? _low->_cost : _cost;
+        auto hcost = _high->_low ? _high->_low->_cost : _high->_cost;
+        if(cost == hcost && _high->_var == _var)
             return _high;
     }
-    if(!cost_consistent)
+    if(_high != nullptr && _high == _low)
+        return _high;
+    if(make_dd)
     {
-        if(_high != nullptr && _high == _low)
-            return _high;
         auto sig = signature();
         auto r = nodemap.insert(sig.first.get(), sig.second);
         auto& ptr = nodemap.get_data(r.second);
@@ -242,7 +234,7 @@ std::pair<std::unique_ptr<unsigned char[]>, size_t> SimpleTree::node_t::signatur
     unsigned char* next = res.first.get();    
     if(is_leaf())
     {
-        ((uint32_t*)next)[0] = _action;
+        ((double*)next)[0] = _cost;
         res.second = sizeof(uint32_t);
     }
     else
@@ -263,25 +255,7 @@ bool SimpleTree::node_t::is_leaf() const {
     return _low == nullptr && _high == nullptr;
 }
 
-bool SimpleTree::node_t::can_merge(bool cost_consistent) const {
-    if(_low && _low->is_leaf())
-    {
-        if(_low->_action != _action || (_low->_cost != _cost/* && cost_consistent*/))
-            return false;
-    }
-    if(_high && _high->is_leaf())
-    {
-        if(_high->_action != _action || (_high->_cost != _cost/* && cost_consistent*/))
-            return false;
-    }
-    assert(_low == nullptr || _high->_action == _action);
-    assert(_high == nullptr || _high->_action == _action);
-    return true;
-}
-
-
-
-void SimpleTree::node_t::rec_insert(double value, size_t action, std::vector<std::pair<bool,bool>>& handled, std::vector<std::pair<double, double> >& bounds, bool minimize) {
+void SimpleTree::node_t::rec_insert(double value, std::vector<std::pair<bool,bool>>& handled, std::vector<std::pair<double, double> >& bounds, bool minimize) {
     auto nid = _var;
     assert(nid < bounds.size());
     bool reset_low = false;
@@ -291,7 +265,6 @@ void SimpleTree::node_t::rec_insert(double value, size_t action, std::vector<std
         (minimize && value < _cost)  ||
         (!minimize && value > _cost))
     {
-        _action = action;
         _cost = value;
         best = true;
     }
@@ -328,7 +301,7 @@ void SimpleTree::node_t::rec_insert(double value, size_t action, std::vector<std
             _low->_parent = this;
             _low->_limit = (!handled[nid].first ? bounds[nid].first : bounds[nid].second);            
         }
-        _low->rec_insert(value, action, handled, bounds, minimize);
+        _low->rec_insert(value, handled, bounds, minimize);
         if(reset_low) handled[_var].first = false;
         if(reset_high) handled[_var].second = false;
     }
@@ -362,7 +335,7 @@ void SimpleTree::node_t::rec_insert(double value, size_t action, std::vector<std
             _high->_var = nid;
             _high->_limit = (!handled[nid].first ? bounds[nid].first : bounds[nid].second);
         }
-        _high->rec_insert(value, action, handled, bounds, minimize);
+        _high->rec_insert(value, handled, bounds, minimize);
         if(reset_low) handled[_var].first = false;
         if(reset_high) handled[_var].second = false;
     }
@@ -394,8 +367,8 @@ void SimpleTree::node_t::rec_insert(double value, size_t action, std::vector<std
             _high->_limit = (!handled[nid].first ? bounds[nid].first : bounds[nid].second);            
         }
 
-        _low->rec_insert(value, action, handled, bounds, minimize);
-        _high->rec_insert(value, action, handled, bounds, minimize);
+        _low->rec_insert(value, handled, bounds, minimize);
+        _high->rec_insert(value, handled, bounds, minimize);
     }
     if(reset_low) handled[_var].first = false;
     if(reset_high) handled[_var].second = false;
@@ -403,7 +376,7 @@ void SimpleTree::node_t::rec_insert(double value, size_t action, std::vector<std
 
 std::ostream& SimpleTree::print(std::ostream& stream)
 {
-    auto dest = std::make_unique<double[]>(_statevars.size());
+/*    auto dest = std::make_unique<double[]>(_statevars.size());
     stream << "{\"regressors\":\n";
     bool fe = true;
     for(size_t i = 0; i < _regressors.size(); ++i)
@@ -425,7 +398,7 @@ std::ostream& SimpleTree::print(std::ostream& stream)
         stream << "\n";
         fe = false;
     }
-    stream << "}";
+    stream << "}";*/
     return stream;
 }
 
@@ -434,7 +407,7 @@ std::ostream& SimpleTree::node_t::print(std::ostream& out, SimpleTree* parent, s
     out << "{\"var\":" << _var << ",\"bound\":" << _limit;
     if(!std::isnan(_cost))
     {
-        out << ",\"value\":" << _cost << ",\"action\":" << _action;
+        out << ",\"value\":" << _cost;
     }
     if(_low)
     {
@@ -459,7 +432,7 @@ std::ostream& SimpleTree::node_t::print(std::ostream& out, SimpleTree* parent, s
 std::ostream& SimpleTree::print_c(std::ostream& stream, std::string name, size_t split) 
 {
     
-    stream << "int " << name << "(const bool* active, const double* disc, const double* vars)\n{\n";
+    stream << "double " << name << "(unsigned int action, const bool* active, const double* disc, const double* vars)\n{\n";
     stream << "\t// Depth = " << _root->depth() << std::endl;
     _root->print_c(stream, _statevars.size(), 1);
     for(size_t i = 0; i < _nodemap.size(); ++i)
@@ -488,7 +461,7 @@ std::ostream& SimpleTree::node_t::print_c(std::ostream& stream, size_t disc, siz
     if(is_leaf())
     {
         for(size_t i = 0; i < tabs; ++i) stream << "\t";
-        stream << "return " << _action << ";" << std::endl;
+        stream << "return " << _cost << ";" << std::endl;
         return stream;
     }
     if(std::isinf(_limit))
@@ -500,30 +473,37 @@ std::ostream& SimpleTree::node_t::print_c(std::ostream& stream, size_t disc, siz
         return stream;
     }
     for(size_t i = 0; i < tabs; ++i) stream << "\t";
-    auto type = disc > _var ? "disc" : "vars";
-    auto vid = disc > _var ? _var : _var - disc;
-    stream << "if(" << type << "[" << vid << "] <= " << _limit << ") ";
+    if(_var == 0)
+    {
+        stream << "if(action <= " << _limit << ") ";
+    }
+    else
+    {
+        auto type = disc > _var-1 ? "disc" : "vars";
+        auto vid = disc > _var-1 ? (_var-1) : _var - (disc+1);
+        stream << "if(" << type << "[" << vid << "] <= " << _limit << ") ";
+    }
     if(_low)
     {
         if(_low->is_leaf() && std::isinf(_low->_limit))
-            stream << "return " << _low->_action;
+            stream << "return " << _low->_cost;
         else
             stream << "goto l" << _low.get();
     }
     else
-        stream << "return " << _action;
+        stream << "return " << _cost;
     stream << ";\n";
     for(size_t i = 0; i < tabs; ++i) stream << "\t";
     stream << "else ";
     if(_high)
     {
         if(_high->is_leaf() && std::isinf(_high->_limit))
-            stream << "return " << _high->_action;
+            stream << "return " << _high->_cost;
         else
             stream << "goto l" << _high.get();
     }
     else
-        stream << "return " << _action;
+        stream << "return " << _cost;
     stream << ";\n";   
     return stream;    
 }

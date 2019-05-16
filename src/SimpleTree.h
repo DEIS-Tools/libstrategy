@@ -35,20 +35,18 @@ private:
     
     struct node_t : public std::enable_shared_from_this<node_t> {
         uint32_t _var = 0;
-        uint32_t _action = 0;
         double _limit = -std::numeric_limits<double>::infinity();
         double _cost = std::numeric_limits<double>::quiet_NaN();
         std::shared_ptr<node_t> _low;
         std::shared_ptr<node_t> _high;
         node_t* _parent;
         void merge(std::vector<double>& key, json& tree, size_t action, size_t vars, bool minimize, SimpleTree& parent);
-        void find_and_insert(json& tree, size_t action, std::vector<std::pair<double,double>>& bounds, bool minimize, size_t keysize, SimpleTree& parent);
-        void insert(double value, size_t action, std::vector<std::pair<double,double>>& bounds, bool minimize);
-        void rec_insert(double value, size_t action, std::vector<std::pair<bool,bool>>& handled, std::vector<std::pair<double, double> >& bounds, bool minimize);
+        void find_and_insert(json& tree, std::vector<std::pair<double,double>>& bounds, bool minimize, size_t keysize, SimpleTree& parent);
+        void insert(double value, std::vector<std::pair<double,double>>& bounds, bool minimize);
+        void rec_insert(double value, std::vector<std::pair<bool,bool>>& handled, std::vector<std::pair<double, double> >& bounds, bool minimize);
         std::ostream& print(std::ostream& out, SimpleTree* parent, size_t tabs = 0) const;
         bool is_leaf() const;
-        bool can_merge(bool cost_consistent) const;
-        std::shared_ptr<node_t> simplify(bool cost_consistent, ptrie::map<std::shared_ptr<node_t>>& nodemap);
+        std::shared_ptr<node_t> simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap);
         std::ostream& print_c(std::ostream& stream, size_t disc, size_t tabs = 0);
         size_t depth() const;
         bool operator==(const node_t& other) const
