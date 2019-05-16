@@ -5,7 +5,6 @@
  */
 
 #include "ZonotopStrategy.h"
-#include "bound.h"
 
 #include <boost/program_options.hpp>
 
@@ -18,7 +17,6 @@ namespace po = boost::program_options;
 
 int main(int argc, char **argv) {
 
-    std::vector<bound_t> bvect;
     po::options_description opts;
     std::string infile;
     std::string learned;

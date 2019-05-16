@@ -12,6 +12,10 @@ add_executable(z2s ${HEADER_FILES} main.cpp ZonotopStrategy.cpp SimpleTree.cpp)
 target_link_libraries(z2s PRIVATE stdc++fs nlohmann_json::nlohmann_json ptrie ${Boost_LIBRARIES})
 target_link_libraries(zonotop2strategy PRIVATE nlohmann_json::nlohmann_json ptrie)
 
-
+install(TARGETS z2s
+	RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+install (FILES  errors.h  libz2s.h SimpleTree.h ZonotopStrategy.h DESTINATION include/z2s)
 
 
