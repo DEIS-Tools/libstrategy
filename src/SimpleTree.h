@@ -1,3 +1,18 @@
+/* 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /*
  *  Copyright Peter G. Jensen, all rights reserved.
  */
@@ -28,6 +43,7 @@ public:
     static SimpleTree parse(std::istream&);
     std::ostream& print(std::ostream& stream);
     std::ostream& print_c(std::ostream& stream, std::string name, size_t split);
+    double value(double* disc, double* cont, uint32_t action) const;
 private:
     using json = nlohmann::json;
     SimpleTree() = default;
@@ -55,7 +71,8 @@ private:
         void get_ranks(std::set<std::pair<double, node_t*>>& values, node_t* start);
         void set_ranks(std::unordered_map<double,double>& values);
         std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<node_t*>& printed, size_t tabs = 0);
-        size_t depth() const;        
+        size_t depth() const;
+        double value(double* disc, double* cont, uint32_t action, size_t ndisc) const;
         bool operator==(const node_t& other) const
         {
             if(_limit != other._limit)

@@ -1,3 +1,18 @@
+/* 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /*
  *  Copyright Peter G. Jensen, all rights reserved.
  */
@@ -85,10 +100,8 @@ SimpleTree SimpleTree::parse(std::istream& input)
             minim = is_minimize;
         if(minim != is_minimize)
             throw base_error("Expected all sub-regressors to have same minimization flag");
-        std::cerr << "HANDLING " << it.key() << std::endl;
         for(auto iit = reg["regressor"].begin(); iit != reg["regressor"].end(); ++iit)
         {
-            std::cerr << "\tHANDLING " << iit.key() << std::endl; 
             size_t action = atoi(iit.key().c_str());
             if(action >= tree._actions.size())
                 throw base_error("Action-index is out of bounds");
@@ -519,46 +532,36 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
     }
 }
 
-
-/*void SimpleTree::node_t::merge(std::vector<double>& key, json& tree, size_t action, size_t vars, bool minimize, SimpleTree& parent) {
-    
-    std::vector<std::pair<double,double>> bounds;
-    bounds.emplace_back(action, action);
-    for(auto k : key)
-        bounds.emplace_back(k,k);
-    bounds.resize(vars+key.size(), std::pair<double,double>(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
-    find_and_insert(tree, bounds, minimize, key.size(), parent);
+double SimpleTree::node_t::value(double* disc, double* cont, uint32_t action) const {
+    return _root->value(disc, cont, action, _statevars.size());
 }
 
-void SimpleTree::node_t::find_and_insert(json& tree, std::vector<std::pair<double, double> >& bounds, bool minimize, size_t keysize, SimpleTree& parent) {
-    if(tree.is_object())
+double SimpleTree::node_t::value(double* disc, double* cont, uint32_t action, size_t ndisc) const {
+    if(is_leaf())
+        return _cost;
+    if(_var < disc)
     {
-        size_t var = tree["var"].get<size_t>() + keysize;
-        double ov = tree["bound"].get<double>();
-        std::swap(ov, bounds[var].second);
-        find_and_insert(tree["low"], bounds, minimize, keysize, parent);
-        std::swap(ov, bounds[var].second);
-        std::swap(ov, bounds[var].first);
-        find_and_insert(tree["high"], bounds, minimize, keysize, parent);
-        std::swap(ov, bounds[var].first);
+        if(disc[_var] <= _limit)
+            return _low ? _low->value(disc, cont, action, ndisc) : _cost;
+        else 
+            return _high ? _high->value(disc, cont, action, ndisc) : _cost;
     }
-    else if(tree.is_number())
+    else if(_var == disc)
     {
-        // do the merge
-        insert(tree.get<double>(), bounds, minimize);
+        if(action <= _limit)
+            return _low ? _low->value(disc, cont, action, ndisc) : _cost;
+        else
+            return _high ? _high->value(disc, cont, action, ndisc) : _cost;
     }
     else
     {
-        std::cerr << tree << std::endl;
-        throw base_error("Leafs of trees are expected to be doubles");
+        if(cont[_var-(disc+1)] <= _limit)
+            return _low ? _low->value(disc, cont, action, ndisc) : _cost;
+        else
+            return _high ? _high->value(disc, cont, action, ndisc) : _cost;        
     }
-}*/
+}
 
-/*void SimpleTree::node_t::insert(double value, std::vector<std::pair<double, double> >& bounds, bool minimize) 
-{
-    std::vector<std::pair<bool,bool>> handled(bounds.size());
-    rec_insert(value, handled, bounds, minimize);
-}*/
 
 
 std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap) {
