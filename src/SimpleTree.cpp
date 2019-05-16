@@ -532,21 +532,21 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
     }
 }
 
-double SimpleTree::node_t::value(double* disc, double* cont, uint32_t action) const {
+double SimpleTree::value(double* disc, double* cont, uint32_t action) const {
     return _root->value(disc, cont, action, _statevars.size());
 }
 
 double SimpleTree::node_t::value(double* disc, double* cont, uint32_t action, size_t ndisc) const {
     if(is_leaf())
         return _cost;
-    if(_var < disc)
+    if(_var < ndisc)
     {
         if(disc[_var] <= _limit)
             return _low ? _low->value(disc, cont, action, ndisc) : _cost;
         else 
             return _high ? _high->value(disc, cont, action, ndisc) : _cost;
     }
-    else if(_var == disc)
+    else if(_var == ndisc)
     {
         if(action <= _limit)
             return _low ? _low->value(disc, cont, action, ndisc) : _cost;
@@ -555,7 +555,7 @@ double SimpleTree::node_t::value(double* disc, double* cont, uint32_t action, si
     }
     else
     {
-        if(cont[_var-(disc+1)] <= _limit)
+        if(cont[_var-(ndisc+1)] <= _limit)
             return _low ? _low->value(disc, cont, action, ndisc) : _cost;
         else
             return _high ? _high->value(disc, cont, action, ndisc) : _cost;        
