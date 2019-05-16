@@ -15,6 +15,7 @@
 #include <istream>
 #include <memory>
 #include <vector>
+#include <unordered_set>
 
 #include <ptrie_map.h>
 #include <nlohmann/json.hpp>
@@ -26,7 +27,6 @@ public:
     static SimpleTree parse(std::istream&);
     std::ostream& print(std::ostream& stream);
     std::ostream& print_c(std::ostream& stream, std::string name, size_t split);
-    void simplify();
 private:
     using json = nlohmann::json;
     SimpleTree() = default;
@@ -34,20 +34,17 @@ private:
     static std::vector<double> parse_key(const std::string& key);
     
     struct node_t : public std::enable_shared_from_this<node_t> {
-        uint32_t _var = 0;
+        uint32_t _var = std::numeric_limits<uint32_t>::max();
         double _limit = -std::numeric_limits<double>::infinity();
-        double _cost = std::numeric_limits<double>::quiet_NaN();
+        double _cost = std::numeric_limits<double>::infinity();
         std::shared_ptr<node_t> _low;
         std::shared_ptr<node_t> _high;
         node_t* _parent;
-        void merge(std::vector<double>& key, json& tree, size_t action, size_t vars, bool minimize, SimpleTree& parent);
-        void find_and_insert(json& tree, std::vector<std::pair<double,double>>& bounds, bool minimize, size_t keysize, SimpleTree& parent);
-        void insert(double value, std::vector<std::pair<double,double>>& bounds, bool minimize);
-        void rec_insert(double value, std::vector<std::pair<bool,bool>>& handled, std::vector<std::pair<double, double> >& bounds, bool minimize);
-        std::ostream& print(std::ostream& out, SimpleTree* parent, size_t tabs = 0) const;
+        void insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize);
+        std::ostream& print(std::ostream& out, size_t tabs = 0) const;
         bool is_leaf() const;
         std::shared_ptr<node_t> simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap);
-        std::ostream& print_c(std::ostream& stream, size_t disc, size_t tabs = 0);
+        std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<node_t*>& printed, size_t tabs = 0);
         size_t depth() const;
         bool operator==(const node_t& other) const
         {
