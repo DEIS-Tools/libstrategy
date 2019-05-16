@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
     std::vector<bound_t> bvect;
     po::options_description opts;
-    std::string infile = "/home/petko/Uni/UppaalMPC/SimpleDCDC/result_simple_boost_matrix.txt";
+    std::string infile;
     std::string learned;
     std::string learned_name = "choice";
     std::string pattern_name = "pattern";

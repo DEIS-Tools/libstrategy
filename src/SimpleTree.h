@@ -33,7 +33,7 @@ private:
     
     static std::vector<double> parse_key(const std::string& key);
     
-    struct node_t {
+    struct node_t : public std::enable_shared_from_this<node_t> {
         uint32_t _var = 0;
         uint32_t _action = 0;
         double _limit = -std::numeric_limits<double>::infinity();
@@ -41,22 +41,46 @@ private:
         std::shared_ptr<node_t> _low;
         std::shared_ptr<node_t> _high;
         node_t* _parent;
-        void merge(json tree, size_t action, size_t vars, bool minimize);
-        void find_and_insert(json tree, size_t action, std::vector<std::pair<double,double>>& bounds, bool minimize);
+        void merge(std::vector<double>& key, json& tree, size_t action, size_t vars, bool minimize, SimpleTree& parent);
+        void find_and_insert(json& tree, size_t action, std::vector<std::pair<double,double>>& bounds, bool minimize, size_t keysize, SimpleTree& parent);
         void insert(double value, size_t action, std::vector<std::pair<double,double>>& bounds, bool minimize);
         void rec_insert(double value, size_t action, std::vector<std::pair<bool,bool>>& handled, std::vector<std::pair<double, double> >& bounds, bool minimize);
         std::ostream& print(std::ostream& out, SimpleTree* parent, size_t tabs = 0) const;
         bool is_leaf() const;
         bool can_merge(bool cost_consistent) const;
-        void simplify(bool cost_consistent);
-        std::ostream& print_c(std::ostream& stream, size_t tabs = 0);
+        std::shared_ptr<node_t> simplify(bool cost_consistent, ptrie::map<std::shared_ptr<node_t>>& nodemap);
+        std::ostream& print_c(std::ostream& stream, size_t disc, size_t tabs = 0);
+        size_t depth() const;
+        bool operator==(const node_t& other) const
+        {
+            if(_limit != other._limit)
+                return false;
+            if(_var != other._var)
+                return false;
+            if(_low != other._low)
+                return false;
+            if(_high != other._high)
+                return false;
+            return true;
+        }
+        bool operator<(const node_t& other) const
+        {
+            if(_limit != other._limit)
+                return _limit < other._limit;
+            if(_var != other._var)
+                return _var < other._var;
+            if(_low != other._low)
+                return _low < other._low;
+            return _high < other._high;
+        }
+        std::pair<std::unique_ptr<unsigned char[]>, size_t> signature() const;
     };
         
     std::vector<std::string> _actions;
     std::vector<std::string> _statevars;
     std::vector<std::string> _pointvars;
-    ptrie::map<node_t> _regressors;
-    
+    std::shared_ptr<node_t> _root = nullptr;
+    ptrie::map<std::shared_ptr<node_t>> _nodemap;
     
 };
 
