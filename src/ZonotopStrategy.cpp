@@ -425,7 +425,7 @@ double ZonotopStrategy::node_t::get_min(size_t dimen) const {
 
 std::ostream& ZonotopStrategy::print_c(std::ostream& stream, std::string function_name) 
 {
-    stream << "int " << function_name << "_patterns[][" << (_max_length + 1) << "] = {\n";
+/*    stream << "const int " << function_name << "_patterns[][" << (_max_length + 1) << "] = {\n";
     bool first = true;
     auto buffer = std::make_unique<uint16_t[]>(_max_length);
     for(size_t i = 0; i < _states.size(); ++i)
@@ -449,7 +449,7 @@ std::ostream& ZonotopStrategy::print_c(std::ostream& stream, std::string functio
         stream << "}\n";
         first = false;
     }    
-    stream << "};\n\n";
+    stream << "};\n\n";*/
     stream << "bool " << function_name << "(const double* args, bool* patterns)\n";
     stream << "{\n";
     _root->print_c(stream, 1);
@@ -472,11 +472,6 @@ std::ostream& ZonotopStrategy::node_t::print_c(std::ostream& out, size_t tabs) c
         }
         if(_low)
             _low->print_c(out, tabs + 1);
-        else
-        {
-            for(size_t i = 0; i < tabs+1; ++i) out << "\t";    
-            out << "return true;\n";
-        }
         for(size_t i = 0; i < tabs; ++i) out << "\t";
         out << "}\n";
     }
@@ -494,11 +489,6 @@ std::ostream& ZonotopStrategy::node_t::print_c(std::ostream& out, size_t tabs) c
         }
         if(_high)
             _high->print_c(out, tabs + 1);
-        else
-        {
-            for(size_t i = 0; i < tabs+1; ++i) out << "\t";    
-            out << "return true;\n";
-        }
         for(size_t i = 0; i < tabs; ++i) out << "\t";    
         out << "}\n";
     }

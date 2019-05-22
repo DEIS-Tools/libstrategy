@@ -82,10 +82,14 @@ int get_pattern(void* ptr, int el, int* write)
 
 double get_min(void* ptr, int dimen)
 {
-    return ((ZonotopStrategy*)ptr)->get_min(dimen);
+	auto val = ((ZonotopStrategy*)ptr)->get_min(dimen);
+std::cerr << "min for " << dimen << " is " << val << std::endl;
+    return val;
 }
 
 double get_max(void* ptr, int dimen)
 {
-    return ((ZonotopStrategy*)ptr)->get_max(dimen);
+	auto val = ((ZonotopStrategy*)ptr)->get_max(dimen);
+	std::cerr << "max for " << dimen << " is " << val << std::endl;
+	return val;
 }

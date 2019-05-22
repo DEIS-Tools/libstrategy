@@ -42,7 +42,7 @@ public:
     virtual ~SimpleTree() = default;
     static SimpleTree parse(std::istream&);
     std::ostream& print(std::ostream& stream);
-    std::ostream& print_c(std::ostream& stream, std::string name, size_t split);
+    std::ostream& print_c(std::ostream& stream, std::string name);
     double value(double* disc, double* cont, uint32_t action) const;
 private:
     using json = nlohmann::json;
@@ -71,6 +71,7 @@ private:
         void get_ranks(std::set<std::pair<double, node_t*>>& values, node_t* start);
         void set_ranks(std::unordered_map<double,double>& values);
         std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<node_t*>& printed, size_t tabs = 0);
+        std::ostream& print_c_nested(std::ostream& stream, size_t disc, size_t tabs, std::vector<node_t*>& toprint, std::shared_ptr<node_t>& node);
         size_t depth() const;
         double value(double* disc, double* cont, uint32_t action, size_t ndisc) const;
         bool operator==(const node_t& other) const
@@ -102,7 +103,6 @@ private:
     std::vector<std::string> _statevars;
     std::vector<std::string> _pointvars;
     std::shared_ptr<node_t> _root = nullptr;
-    ptrie::map<std::shared_ptr<node_t>> _nodemap;
     
 };
 

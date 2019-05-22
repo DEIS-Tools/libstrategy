@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         std::cout << opts << "\n";
         return 1;
     }
-    size_t split = std::numeric_limits<size_t>::max();
+    std::cout << "#include \"sub_ctrl.h\"\n";
     if(!infile.empty())
     {
         std::ifstream instream(infile);
@@ -68,7 +68,6 @@ int main(int argc, char **argv) {
         }
         auto strategy = ZonotopStrategy::parse(instream);
         strategy.print_c(std::cout, pattern_name);
-        split = strategy.num_patterns();
     }    
     if(learned.empty())
     {
@@ -82,7 +81,7 @@ int main(int argc, char **argv) {
     }
     auto learned_strategy = SimpleTree::parse(lstream);
     //strategy.filter(learned_strategy);
-    learned_strategy.print_c(std::cout, learned_name, split);
+    learned_strategy.print_c(std::cout, learned_name);
     return 0;
 }
 
