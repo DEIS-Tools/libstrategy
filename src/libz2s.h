@@ -41,6 +41,10 @@ int get_pattern(void*, int el, int* write);
 double get_min(void*, int dimen);
 double get_max(void*, int dimen);
 
+void* parse_learned(const char*);
+void destroy_learned(void*);
+double weight(void*, const double* disc, const double* cont, int a);
+
 #ifdef __cplusplus
 }
 #endif

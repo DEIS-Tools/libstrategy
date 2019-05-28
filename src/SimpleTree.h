@@ -43,7 +43,7 @@ public:
     static SimpleTree parse(std::istream&);
     std::ostream& print(std::ostream& stream);
     std::ostream& print_c(std::ostream& stream, std::string name);
-    double value(double* disc, double* cont, uint32_t action) const;
+    double value(const double* disc, const double* cont, uint32_t action) const;
 private:
     using json = nlohmann::json;
     SimpleTree() = default;
@@ -73,7 +73,7 @@ private:
         std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<node_t*>& printed, size_t tabs = 0);
         std::ostream& print_c_nested(std::ostream& stream, size_t disc, size_t tabs, std::vector<node_t*>& toprint, std::shared_ptr<node_t>& node);
         size_t depth() const;
-        double value(double* disc, double* cont, uint32_t action, size_t ndisc) const;
+        double value(const double* disc, const double* cont, uint32_t action, size_t ndisc) const;
         bool operator==(const node_t& other) const
         {
             if(_limit != other._limit)
@@ -102,7 +102,12 @@ private:
     std::vector<std::string> _actions;
     std::vector<std::string> _statevars;
     std::vector<std::string> _pointvars;
-    std::shared_ptr<node_t> _root = nullptr;
+    std::vector<
+        std::pair<
+            std::vector<double>,
+            std::vector<std::shared_ptr<node_t>>
+        >
+    > _elements;
     
 };
 

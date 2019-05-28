@@ -93,3 +93,35 @@ double get_max(void* ptr, int dimen)
 	std::cerr << "max for " << dimen << " is " << val << std::endl;
 	return val;
 }
+
+
+void* parse_learned(const char* file)
+{
+    if(file == nullptr)
+    {
+        std::cerr << "Input file must be specified" << std::endl;
+        exit(-1);
+        return nullptr;
+    }
+    std::string fn(file);
+    std::ifstream instream(fn);
+    if(instream.fail())
+    {
+        std::cerr << "Could not open infile for reading : " << fn << std::endl;
+        exit(-1);
+        return nullptr;
+    }
+    std::cerr << "PARSING " << fn << std::endl;
+    auto res = new SimpleTree(SimpleTree::parse(instream));
+    return res;
+}
+
+void destroy_learned(void* ptr)
+{
+    delete (SimpleTree*)ptr;
+}
+
+double weight(void* ptr, const double* disc, const double* cont, int a)
+{
+    return ((SimpleTree*)ptr)->value(disc, cont, a);
+}
