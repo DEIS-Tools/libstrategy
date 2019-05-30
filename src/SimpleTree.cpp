@@ -240,7 +240,7 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
             }
         }
         
-        /*std::set<std::pair<double,node_t*>> values;
+        std::set<std::pair<double,node_t*>> values;
         for(auto& n : nodes)
         {
             if(n == nullptr) continue;
@@ -254,7 +254,7 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
             replace[e.first] = id;
 //            std::cerr << e.first << " : " << e.second << std::endl; 
         }
-        set_ranks(replace);*/
+        set_ranks(replace);
     }
 }
 
