@@ -33,7 +33,7 @@
 #include <unordered_set>
 #include <set>
 
-#include <ptrie_map.h>
+#include <ptrie/ptrie_map.h>
 #include <nlohmann/json.hpp>
 
 class SimpleTree {
@@ -41,9 +41,13 @@ public:
     SimpleTree(const SimpleTree& orig) = default;
     virtual ~SimpleTree() = default;
     static SimpleTree parse(std::istream&);
-    std::ostream& print(std::ostream& stream);
-    std::ostream& print_c(std::ostream& stream, std::string name);
+    std::ostream& print(std::ostream& stream) const;
+    std::ostream& print_c(std::ostream& stream, std::string name) const;
     double value(const double* disc, const double* cont, uint32_t action) const;
+    bool is_minimization() const { return _is_minimization; }
+    const std::vector<std::string> &actions() const { return _actions; }
+    const std::vector<std::string> &discrete_features() const { return _statevars; }
+    const std::vector<std::string> &continous_features() const { return _pointvars; }
 private:
     using json = nlohmann::json;
     SimpleTree() = default;
@@ -70,8 +74,8 @@ private:
         bool subsumes(std::vector<std::pair<double,double>>& bounds, double val, bool minimization, size_t offset);
         void get_ranks(std::set<std::pair<double, node_t*>>& values, node_t* start);
         void set_ranks(std::unordered_map<double,double>& values);
-        std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<node_t*>& printed, size_t tabs = 0);
-        std::ostream& print_c_nested(std::ostream& stream, size_t disc, size_t tabs, std::vector<node_t*>& toprint, std::shared_ptr<node_t>& node);
+        std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<const node_t*>& printed, size_t tabs = 0) const;
+        std::ostream& print_c_nested(std::ostream& stream, size_t disc, size_t tabs, std::vector<const node_t*>& toprint, const std::shared_ptr<node_t>& node) const;
         size_t depth() const;
         double value(const double* disc, const double* cont, uint32_t action, size_t ndisc) const;
         bool operator==(const node_t& other) const
@@ -108,6 +112,7 @@ private:
             std::vector<std::shared_ptr<node_t>>
         >
     > _elements;
+    bool _is_minimization = true;
     
 };
 

@@ -252,7 +252,7 @@ void ZonotopStrategy::try_merge(node_t* node, size_t state) {
 }
 
 
-std::ostream& ZonotopStrategy::node_t::print(std::ostream& out, ZonotopStrategy* parent, size_t tabs) const {
+std::ostream& ZonotopStrategy::node_t::print(std::ostream& out, const ZonotopStrategy* parent, size_t tabs) const {
     for(size_t i = 0; i < tabs; ++i) out << "\t";
     out << "{\"var\":" << _varid << ",\"bound\":" << _limit;
     auto buffer = std::make_unique<uint16_t[]>(parent->_max_length);
@@ -292,7 +292,7 @@ std::ostream& ZonotopStrategy::node_t::print(std::ostream& out, ZonotopStrategy*
             if(!fp)
                 out << ",";
             out << "[";
-            size_t length = parent->_states.unpack(p, (unsigned char*)buffer.get());
+            size_t length = const_cast<ZonotopStrategy*>(parent)->_states.unpack(p, (unsigned char*)buffer.get());
             bool fe = true;
             for(size_t i = 0; i < length/sizeof(uint16_t); ++i)
             {
@@ -335,7 +335,6 @@ void ZonotopStrategy::active(const double* sampel, bool* write) const {
 //    _root->print(std::cerr, (ZonotopStrategy*)this);
     while(current)
     {
-
         if(sampel[current->_varid] >= current->_limit)
         {
             for(auto p : current->_high_patterns)
@@ -366,7 +365,6 @@ void ZonotopStrategy::active(const double* sampel, bool* write) const {
         }        
         break;
     }
-    //std::cerr << "TOT ACTIVE " << active << std::endl;
     if(active == 0)
         std::cerr << "No active for [" << sampel[0] << ", " << sampel[1] << "]" << std::endl;
 }
@@ -389,7 +387,7 @@ int ZonotopStrategy::get_pattern(int el, int* write) {
     return length/sizeof(uint16_t);
 }
 
-std::ostream& ZonotopStrategy::print(std::ostream& stream) {
+std::ostream& ZonotopStrategy::print(std::ostream& stream) const {
     if(_root)
         _root->print(stream, this);
     return stream;
@@ -423,7 +421,7 @@ double ZonotopStrategy::node_t::get_min(size_t dimen) const {
 
 
 
-std::ostream& ZonotopStrategy::print_c(std::ostream& stream, std::string function_name) 
+std::ostream& ZonotopStrategy::print_c(std::ostream& stream, std::string function_name) const
 {
 /*    stream << "const int " << function_name << "_patterns[][" << (_max_length + 1) << "] = {\n";
     bool first = true;

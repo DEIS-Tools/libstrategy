@@ -47,8 +47,8 @@ public:
     int get_pattern(int el, int* write);
     double get_min(size_t dimen) const;
     double get_max(size_t dimen) const;
-    std::ostream& print(std::ostream&);
-    std::ostream& print_c(std::ostream& stream, std::string function_name);
+    std::ostream& print(std::ostream&) const;
+    std::ostream& print_c(std::ostream& stream, std::string function_name) const;
 private:
     ZonotopStrategy() = default;
     ptrie::set_stable<> _states;
@@ -61,7 +61,7 @@ private:
         std::vector<size_t> _low_patterns;
         std::vector<size_t> _high_patterns;
         node_t* _parent;
-        std::ostream& print(std::ostream& out, ZonotopStrategy* parent, size_t tabs = 0) const;
+        std::ostream& print(std::ostream& out, const ZonotopStrategy* parent, size_t tabs = 0) const;
         std::ostream& print_c(std::ostream& out, size_t tabs = 0) const;
         double get_min(size_t dimen) const;
         double get_max(size_t dimen) const;
