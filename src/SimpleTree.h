@@ -71,7 +71,7 @@ private:
         void action_nodes(std::vector<std::shared_ptr<node_t>>& nodes, uint32_t low, uint32_t high, uint32_t varid);
         std::pair<double,double> compute_min_max();
         void check_tiles(node_t* start, std::vector<std::shared_ptr<node_t>>& , std::vector<std::pair<double,double>>& bounds, double val, bool minimization, size_t offset);
-        bool subsumes(std::vector<std::pair<double,double>>& bounds, double val, bool minimization, size_t offset);
+        bool subsumes(std::vector<std::pair<double,double>>& bounds, std::vector<std::pair<double,double>>& obounds, double val, bool minimization, size_t offset);
         void get_ranks(std::set<std::pair<double, node_t*>>& values, node_t* start);
         void set_ranks(std::unordered_map<double,double>& values);
         std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<const node_t*>& printed, size_t tabs = 0) const;
@@ -106,12 +106,7 @@ private:
     std::vector<std::string> _actions;
     std::vector<std::string> _statevars;
     std::vector<std::string> _pointvars;
-    std::vector<
-        std::pair<
-            std::vector<double>,
-            std::vector<std::shared_ptr<node_t>>
-        >
-    > _elements;
+    std::shared_ptr<node_t> _root;
     bool _is_minimization = true;
     
 };
