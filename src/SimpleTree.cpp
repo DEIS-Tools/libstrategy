@@ -862,7 +862,7 @@ std::ostream& SimpleTree::print_c(std::ostream& stream, std::string name) const
     std::unordered_set<const node_t*> printed;
     std::vector<const node_t*> toprint;
     if(_root)
-        _root->print_c_nested(stream, 0, 1, toprint, _root);
+        _root->print_c_nested(stream, _statevars.size(), 1, toprint, _root);
     for(auto n : toprint)
         n->print_c(stream, 0, printed, 1);
     stream << "\treturn inf;\n";
