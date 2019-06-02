@@ -37,6 +37,8 @@ int main(int argc, char **argv) {
     std::string learned;
     std::string learned_name = "choice";
     std::string pattern_name = "pattern";
+    double accuracy = 0;
+    double exactness = 0;
     opts.add_options()
             ("help,h", "produce help message")
             ("input,i", po::value<std::string>(&infile),
@@ -47,6 +49,8 @@ int main(int argc, char **argv) {
                 "Output function name for choice.")
             ("pattern,p", po::value<std::string>(&pattern_name),
                 "Output function name for pattern.")
+            ("accuracy,a", po::value<double>(&accuracy))
+            ("exactness,e", po::value<double>(&exactness))
     ;
 
     po::variables_map vm;
@@ -79,7 +83,7 @@ int main(int argc, char **argv) {
         std::cerr << "Could not open learned for reading : " << learned << std::endl;
         return -1;            
     }
-    auto learned_strategy = SimpleTree::parse(lstream);
+    auto learned_strategy = SimpleTree::parse(lstream, accuracy, exactness);
     //strategy.filter(learned_strategy);
     learned_strategy.print_c(std::cout, learned_name);
     return 0;

@@ -35,7 +35,7 @@
 
 using json = nlohmann::json;
 
-SimpleTree SimpleTree::parse(std::istream& input) 
+SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactness) 
 {
     auto raw = json::parse(input);
     if(!raw.is_object())
@@ -100,7 +100,6 @@ SimpleTree SimpleTree::parse(std::istream& input)
             minim = is_minimize;
         if(minim != is_minimize)
             throw base_error("Expected all sub-regressors to have same minimization flag");
-        std::vector<std::shared_ptr<node_t>> regs(tree._actions.size());
         for(auto iit = reg["regressor"].begin(); iit != reg["regressor"].end(); ++iit)
         {
             size_t action = atoi(iit.key().c_str());
@@ -117,13 +116,16 @@ SimpleTree SimpleTree::parse(std::istream& input)
             }
             
             auto obj = iit.value();
-            tree._root->insert(key, obj, action, tree, 0, is_minimize);
+            tree._root->insert(key, obj, action, tree, 0, is_minimize, accuracy != 0 ? 1.0/accuracy : 0, exactness != 0 ? 1.0/exactness : 0);
         }
     }
     tree._is_minimization = minim != 0;
     tree._root->subsumption_reduction(minim, tree);
     ptrie::map<std::shared_ptr<node_t>> nodemap;
-    tree._root = tree._root->simplify(true, nodemap);
+    if(tree._root)
+        tree._root = tree._root->simplify(true, nodemap, tree);
+    if(tree._root)
+        tree._root->_parent = nullptr;
     return tree;
 }
 
@@ -202,59 +204,64 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
         {
             return;
         }
-        std::vector<std::shared_ptr<node_t>> nodes(parent._actions.size());        
-        action_nodes(nodes, 0, parent._actions.size()-1, parent._statevars.size());
-        auto val = std::numeric_limits<double>::infinity();
-        if(!minimization) val *= -1;
-        for(auto& n : nodes)
         {
-            if(n == nullptr) continue;
-            auto mm = n->compute_min_max();
-            if(minimization) val = std::min(val, mm.second);
-            else             val = std::max(val, mm.first);
-        }
-        std::vector<std::pair<double,double>> bounds(parent._pointvars.size(), std::make_pair(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
-        for(auto& n : nodes)
-        {
-            bool skip = false;
-            if(n == nullptr) continue;
-            if(minimization && val < n->_mincost)
-                skip = true;
-            else if(!minimization && val > n->_maxcost)
-                skip = true;
-            if(skip)
+            std::vector<std::shared_ptr<node_t>> nodes(parent._actions.size());        
+            action_nodes(nodes, 0, parent._actions.size()-1, parent._statevars.size());
+            auto val = std::numeric_limits<double>::infinity();
+            if(!minimization) val *= -1;
+            for(auto& n : nodes)
             {
-                n->_low = nullptr;
-                n->_high = nullptr;
-                n->_var = std::numeric_limits<uint32_t>::max();
-                n->_limit = std::numeric_limits<double>::infinity();
-                n->_cost = std::numeric_limits<double>::infinity();
-                if(!minimization)
-                    n->_cost *= -1; 
-                n->_mincost = std::numeric_limits<double>::infinity();
-                n->_maxcost = -std::numeric_limits<double>::infinity();
+                if(n == nullptr) continue;
+                auto mm = n->compute_min_max();
+                if(minimization) val = std::min(val, mm.second);
+                else             val = std::max(val, mm.first);
             }
-            else
+            std::vector<std::pair<double,double>> bounds(parent._pointvars.size(), std::make_pair(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
+            for(auto& n : nodes)
             {
-                n->check_tiles(n.get(), nodes, bounds, val, minimization, parent._statevars.size() + 1);
+                bool skip = false;
+                if(n == nullptr) continue;
+                if(minimization && val < n->_mincost)
+                    skip = true;
+                else if(!minimization && val > n->_maxcost)
+                    skip = true;
+                if(skip)
+                {
+                    n->_low = nullptr;
+                    n->_high = nullptr;
+                    n->_var = std::numeric_limits<uint32_t>::max();
+                    n->_limit = std::numeric_limits<double>::infinity();
+                    n->_cost = std::numeric_limits<double>::infinity();
+                    if(!minimization)
+                        n->_cost *= -1; 
+                    n->_mincost = std::numeric_limits<double>::infinity();
+                    n->_maxcost = -std::numeric_limits<double>::infinity();
+                }
+                else
+                {
+                    n->check_tiles(n.get(), nodes, bounds, val, minimization, parent._statevars.size() + 1);
+                }
             }
         }
-        
-        std::set<std::pair<double,node_t*>> values;
-        for(auto& n : nodes)
         {
-            if(n == nullptr) continue;
-            get_ranks(values, n.get());
+            std::vector<std::shared_ptr<node_t>> nodes(parent._actions.size());        
+            action_nodes(nodes, 0, parent._actions.size()-1, parent._statevars.size());
+            std::set<std::pair<double,node_t*>> values;
+            for(auto& n : nodes)
+            {
+                if(n == nullptr) continue;
+                get_ranks(values, n.get());
+            }
+            std::unordered_map<double,double> replace;
+            for(auto& e : values)
+            {
+                if(replace.count(e.first) > 0) continue;
+                double id = replace.size();
+                replace[e.first] = id;
+    //            std::cerr << e.first << " : " << e.second << std::endl; 
+            }
+            set_ranks(replace);
         }
-        std::unordered_map<double,double> replace;
-        for(auto& e : values)
-        {
-            if(replace.count(e.first) > 0) continue;
-            double id = replace.size();
-            replace[e.first] = id;
-//            std::cerr << e.first << " : " << e.second << std::endl; 
-        }
-        set_ranks(replace);
     }
 }
 
@@ -371,6 +378,25 @@ void SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
     if(!is_leaf()) {
         double org = _limit;
         auto& bnd = bounds[_var- offset];
+        std::shared_ptr<node_t> switchnode = nullptr;
+        if(bnd.second <= _limit)
+        {
+            switchnode = _low;
+        }
+        if(bnd.first >= _limit)
+        {
+            switchnode = _high;
+        }
+        if(switchnode)
+        {
+            switchnode->_parent = _parent;
+            if(_parent->_low.get() == this)
+                _parent->_low = switchnode;
+            else
+                _parent->_high = switchnode;
+            switchnode->check_tiles(start, nodes, bounds, val, minimization, offset);
+            return;
+        }
         std::swap(org, bnd.second);
         if(_low)
             _low->check_tiles(start, nodes, bounds, val, minimization, offset);
@@ -394,7 +420,7 @@ void SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
 
 
 
-void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize)
+void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize, double accuracy, double exactness)
 {    
     if((tree.is_number() || tree.is_string()) && key.size() < prefix)
     {
@@ -409,12 +435,14 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                 _cost = std::isinf(_cost) ? nc : std::min(nc, _cost);
             else
                 _cost = std::isinf(_cost) ? nc : std::max(nc, _cost);
+            if(accuracy != 0)
+                _cost = std::round(_cost*accuracy)/accuracy;
         }
         else
         {
             assert(false);
-            _low->insert(key, tree, action, parent, prefix, minimize);
-            _high->insert(key, tree, action, parent, prefix, minimize);
+            _low->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
+            _high->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
         }
         return;
     }
@@ -444,13 +472,17 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
             else if(prefix < key.size())
                 _limit = key[prefix];
             else
+            {
                 _limit = tree["bound"].get<double>();
+                if(exactness != 0)
+                    _limit = std::round(_limit*exactness)/exactness;
+            }
             if(prefix <= key.size())
-                _low->insert(key, tree, action, parent, prefix+1, minimize);
+                _low->insert(key, tree, action, parent, prefix+1, minimize, accuracy, exactness);
             else
             {
-                _low->insert(key, tree["low"], action, parent, prefix+1, minimize);
-                _high->insert(key, tree["high"], action, parent, prefix+1, minimize);
+                _low->insert(key, tree["low"], action, parent, prefix+1, minimize, accuracy, exactness);
+                _high->insert(key, tree["high"], action, parent, prefix+1, minimize, accuracy, exactness);
             }
         }
         else
@@ -473,22 +505,24 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
         else
         {
             double bound = tree["bound"].get<double>();
+            if(exactness != 0)
+                bound = std::round(bound*exactness)/exactness;
             if(_limit == bound)
             {
-                _low->insert(key, tree["low"], action, parent, prefix+1, minimize);
-                _high->insert(key, tree["high"], action, parent, prefix+1, minimize);
+                _low->insert(key, tree["low"], action, parent, prefix+1, minimize, accuracy, exactness);
+                _high->insert(key, tree["high"], action, parent, prefix+1, minimize, accuracy, exactness);
             }
             else
             {
                 if(_limit > bound)
                 {
-                    _low->insert(key, tree, action, parent, prefix, minimize);
-                    _high->insert(key, tree["high"], action, parent, prefix + 1, minimize);
+                    _low->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
+                    _high->insert(key, tree["high"], action, parent, prefix + 1, minimize, accuracy, exactness);
                 }
                 else
                 {
-                    _high->insert(key, tree, action, parent, prefix, minimize);
-                    _low->insert(key, tree["low"], action, parent, prefix + 1, minimize);
+                    _high->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
+                    _low->insert(key, tree["low"], action, parent, prefix + 1, minimize, accuracy, exactness);
                 }
             }
         }        
@@ -532,20 +566,20 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                 n1->_parent = _parent;
             }
             _parent = n1.get();
-            next->insert(key, tree, action, parent, prefix, minimize);
+            next->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
         }
         else
         {
             if(_limit == action)
             {
-                _low->insert(key, tree, action, parent, prefix + 1, minimize);
+                _low->insert(key, tree, action, parent, prefix + 1, minimize, accuracy, exactness);
             }
             else
             {
                 if(_limit > action)
-                    _low->insert(key, tree, action, parent, prefix, minimize);
+                    _low->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
                 else
-                    _high->insert(key, tree, action, parent, prefix, minimize);                
+                    _high->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);                
             }
         }
     }
@@ -560,14 +594,14 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
         {
             if(_limit == key[prefix])
             {
-                _low->insert(key, tree, action, parent, prefix + 1, minimize);
+                _low->insert(key, tree, action, parent, prefix + 1, minimize, accuracy, exactness);
             }
             else
             {
                 if(_limit > key[prefix])
-                    _low->insert(key, tree, action, parent, prefix, minimize);
+                    _low->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
                 else
-                    _high->insert(key, tree, action, parent, prefix, minimize);
+                    _high->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
             }
         }
     }
@@ -607,9 +641,20 @@ double SimpleTree::node_t::value(const double* disc, const double* cont, uint32_
 
 
 
-std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap) {
-    if(_low) _low = _low->simplify(make_dd, nodemap);
-    if(_high) _high = _high->simplify(make_dd, nodemap);
+std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap, SimpleTree& parent) {
+    if(_low) _low = _low->simplify(make_dd, nodemap, parent);
+    if(_high) _high = _high->simplify(make_dd, nodemap, parent);
+    if(_low)
+        _low->_parent = this;
+    if(_high)
+        _high->_parent = this;
+    if(_var < parent._statevars.size())
+    {
+        if(_low && _low->is_leaf() && std::isinf(_low->_cost))
+            return _high;
+        if(_high && _high->is_leaf() && std::isinf(_high->_cost))
+            return _low;
+    }
     if(std::isinf(_limit) && (_low != nullptr || _high != nullptr))
     {
         return _low == nullptr ? _high : _low;
