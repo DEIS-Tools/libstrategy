@@ -214,37 +214,29 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
             
             action_nodes(nodes, 0, parent._actions.size()-1, parent._statevars.size());
             auto val = std::numeric_limits<double>::infinity();
-            std::cerr << "START " << std::endl;
             if(!minimization) val *= -1;
             for(auto& n : nodes)
             {
                 auto mm = n->compute_min_max();
                 if(std::isinf(mm.first))
                 {
-                    std::cerr << "NOPE" << std::endl;
                     exit(0);
                 }
                 if(std::isinf(n->_mincost))
                 {
-                    std::cerr << "NOPE2" << std::endl;
                     exit(0);
                 }
                 if(minimization) val = std::min(val, mm.second);
                 else             val = std::max(val, mm.first);
-                std::cerr << "GOT " << mm.first << std::endl;
             }
-            std::cerr << "MINVAL " << val << std::endl;
             std::vector<std::pair<double,double>> bounds(parent._pointvars.size(), std::make_pair(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
             for(auto& n : nodes)
             {
-                std::cerr << n.get() << std::endl;
                 bool skip = false;
                 if(std::isinf(n->_mincost))
                 {
-                    std::cerr << "NOPE3" << std::endl;
                     exit(0);
                 }
-                std::cerr << n.get() << " : [" << n->_mincost << ", " << n->_maxcost << "]" << std::endl;
                 if(minimization && val < n->_mincost)
                     skip = true;
                 else if(!minimization && val > n->_maxcost)
@@ -260,12 +252,11 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
                         n->_cost *= -1; 
                     n->_mincost = std::numeric_limits<double>::infinity();
                     n->_maxcost = -std::numeric_limits<double>::infinity();
-                    std::cerr << "REM " << std::endl;
-                }/*
+                }
                 else
                 {
                     n->check_tiles(n.get(), nodes, bounds, val, minimization, parent._statevars.size() + 1);
-                }*/
+                }
             }
         }
         /*{
@@ -360,18 +351,26 @@ void SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
     auto obounds = bounds;
     bool remove = false;
     if(minimization && val < _mincost)
+    {
         remove = true;
+    }
     else if(!minimization && val > _maxcost)
+    {
         remove = true;
+    }
 
     if(!remove && is_leaf())
     {
         if(!std::isinf(_cost))
         {
             if(minimization && val < _cost)
+            {
                 remove = true;
+            }
             else if(!minimization && val > _cost)
+            {
                 remove = true;
+            }
             else
             {
                 for(auto& n : nodes)
@@ -385,7 +384,11 @@ void SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                 }
             }
         }
-        else remove = true;
+        else 
+        {
+            remove = true;
+
+        }
     }
     
     if(remove)
@@ -747,6 +750,16 @@ std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, p
             return _high;
         if(_high && _high->is_leaf() && std::isinf(_high->_cost))
             return _low;
+    }
+    if(_var == parent._statevars.size())
+    {
+        if(_low && _low->is_leaf() && std::isinf(_low->_cost) &&
+           _high && (!_high->is_leaf() || !std::isinf(_high->_cost)) )
+        {
+            if(_high->_low && _high->_low->is_leaf() && std::isinf(_high->_low->_cost))
+                return _high;
+            return shared_from_this();
+        }
     }
     if(std::isinf(_limit) && (_low != nullptr || _high != nullptr))
     {
