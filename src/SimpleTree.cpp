@@ -689,6 +689,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
 
 void SimpleTree::node_t::consistent(size_t prefix) const
 {
+#ifndef NDEBUG
     assert(_parent != this);
     assert(_parent == nullptr || _parent->_low.get() == this || _parent->_high.get() == this);
     assert(_low == nullptr || _low->_parent == this);
@@ -700,6 +701,7 @@ void SimpleTree::node_t::consistent(size_t prefix) const
     if(_var < prefix) assert(_parent == nullptr || _parent->_var <= _var);
     if(_low) _low->consistent(prefix);
     if(_high) _high->consistent(prefix);
+#endif
 }
 
 
