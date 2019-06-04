@@ -751,21 +751,7 @@ std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, p
         if(_high && _high->is_leaf() && std::isinf(_high->_cost))
             return _low;
     }
-    if(_var == parent._statevars.size())
-    {
-        if(_low && _low->is_leaf() && std::isinf(_low->_cost) &&
-           _high && (!_high->is_leaf() || !std::isinf(_high->_cost)) )
-        {
-            if(_high->_low && _high->_low->is_leaf() && std::isinf(_high->_low->_cost))
-                return _high;
-            return shared_from_this();
-        }
-    }
-    if(std::isinf(_limit) && (_low != nullptr || _high != nullptr))
-    {
-        return _low == nullptr ? _high : _low;
-    }
-    
+
     assert(_low.get() != this);
     assert(_high.get() != this);
     if( (_low == nullptr || _low->is_leaf()) &&
@@ -783,7 +769,34 @@ std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, p
             return shared_from_this();
         }
     }
-    if(make_dd)
+
+    if(std::isinf(_limit) && (_low != nullptr || _high != nullptr))
+    {
+        assert(false);
+        return _low == nullptr ? _high : _low;
+    }
+    
+    // if comparison on same variable in on child and other child is leaf, then
+    // if the non-leaf child has a leaf-child in, we can merge.
+    {
+        if(_low && _low->is_leaf() && std::isinf(_low->_cost) &&
+           _high && (!_high->is_leaf() || !std::isinf(_high->_cost)) &&
+           _high->_var == _var && _high->_low && _high->_low->is_leaf() && std::isinf(_high->_low->_cost))
+        {
+            return _high;
+        }
+
+        if(_high && _high->is_leaf() && std::isinf(_high->_cost) &&
+           _low && (!_low->is_leaf() || !std::isinf(_low->_cost)) &&
+           _low->_var == _var && _low->_high && _low->_high->is_leaf() && std::isinf(_low->_high->_cost))
+        {
+            return _low;
+        }
+    }
+    
+    
+
+    /*if(make_dd)
     {
         if(_high == nullptr)
             return _low;
@@ -803,7 +816,7 @@ std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, p
             if(cost == hcost && _high->_var == _var)
                 return _high;
         }
-    }
+    }*/
     if(_high != nullptr && _high == _low)
     {
         return _high;
