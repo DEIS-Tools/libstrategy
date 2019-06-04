@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
             return -1;            
         }
         auto strategy = ZonotopStrategy::parse(instream);
+	std::cout << "// From \"" << infile << "\"" << std::endl;
         strategy.print_c(std::cout, pattern_name);
     }    
     if(learned.empty())
@@ -83,6 +84,7 @@ int main(int argc, char **argv) {
         std::cerr << "Could not open learned for reading : " << learned << std::endl;
         return -1;            
     }
+    std::cout << "// From \"" << learned  << "\"" << std::endl;
     auto learned_strategy = SimpleTree::parse(lstream, accuracy, exactness);
     //strategy.filter(learned_strategy);
     learned_strategy.print_c(std::cout, learned_name);

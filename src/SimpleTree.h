@@ -78,6 +78,7 @@ private:
         std::ostream& print_c_nested(std::ostream& stream, size_t disc, size_t tabs, std::vector<const node_t*>& toprint, const std::shared_ptr<node_t>& node) const;
         size_t depth() const;
         double value(const double* disc, const double* cont, uint32_t action, size_t ndisc) const;
+        void consistent(size_t) const;
         bool operator==(const node_t& other) const
         {
             if(_limit != other._limit)
