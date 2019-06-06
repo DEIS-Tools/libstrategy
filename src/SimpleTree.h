@@ -78,6 +78,7 @@ private:
         size_t depth() const;
         double value(const double* disc, const double* cont, uint32_t action, size_t ndisc) const;
         void consistent(size_t) const;
+        bool cost_intersect(const node_t& other) const;
         bool operator==(const node_t& other) const
         {
             if(_limit != other._limit)

@@ -468,7 +468,12 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
         bool res = false;
         if(switchnode)
         {
-            res = switchnode->check_tiles(start, nodes, bounds, val, minval, minimization, offset);
+            _var = switchnode->_var;
+            _limit = switchnode->_limit;
+            _cost = switchnode->_cost;
+            _low = switchnode->_low;
+            _high = switchnode->_high;
+            return check_tiles(start, nodes, bounds, val, minval, minimization, offset);
         }
         else
         {
@@ -483,13 +488,12 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
         }
         _cost_bounds.first = std::max(_low->_cost_bounds.first, _high->_cost_bounds.first);
         _cost_bounds.second = std::min(_low->_cost_bounds.second, _high->_cost_bounds.second);
-        if(_low->_cost_bounds.first <= _low->_cost_bounds.second && 
-           _high->_cost_bounds.first <= _high->_cost_bounds.second)
+        if(_cost_bounds.first <= _cost_bounds.second)
         {
+            // if both are leafs and can be merged.
             if(_low && _low->is_leaf() && _high && _high->is_leaf())
             {
-                if(_low->_cost_bounds.first < _high->_cost_bounds.second && 
-                   _high->_cost_bounds.first < _low->_cost_bounds.second)
+                if(_low->cost_intersect(*_high))
                 {
                     /*std::cerr << "[" << _low->_cost_bounds.first << ", " << _low->_cost_bounds.second << "]" << std::endl;
                     std::cerr << "[" << _high->_cost_bounds.first << ", " << _high->_cost_bounds.second << "]" << std::endl;
@@ -517,22 +521,27 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                     //std::cerr << "REMO 2" << std::endl;
                 }
             }
-            /*else
+            else
             {
-                std::shared_ptr<node_t> node;
+                // check if one is leaf and sibiling has leaf on same side which
+                // can be merged
+                std::shared_ptr<node_t> node, other;
                 if(_low && _low->is_leaf() &&
                    _high && !_high->is_leaf() &&
                    _high->_var == _var && _high->_low && _high->_low->is_leaf() && 
-                   _high->_low->_cost == _low->_cost)
+                   _high->_low->cost_intersect(*_low))
                 {
                     node = _high;
+                    other = _low;
                 }
 
                 if(_high && _high->is_leaf() &&
                    _low && (!_low->is_leaf() || !std::isinf(_low->_cost)) &&
-                   _low->_var == _var && _low->_high && _low->_high->is_leaf() && _low->_high->_cost == _high->_cost)
+                   _low->_var == _var && _low->_high && _low->_high->is_leaf() && 
+                   _low->_high->cost_intersect(*_high))
                 {
                     node = _low;
+                    other = _high;
                 }
 
                 if(node)
@@ -541,18 +550,27 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                     _var = node->_var;
                     _limit = node->_limit;
                     _cost = node->_cost;
-                    _low = nullptr;
-                    _high = nullptr;
+                    _low = node->_low;
+                    _high = node->_high;
+                    // no need to update cost-bounds here.
                     res = true;
                 }
-            }*/
+                else
+                {
+                   // if(!_low->is_leaf() && _low->_high->)
+                }
+            }
         }
         return res;
     }
     return false;
 }
 
-
+bool SimpleTree::node_t::cost_intersect(const node_t& other) const
+{
+    return _cost_bounds.first < other._cost_bounds.second && 
+           other._cost_bounds.first < _cost_bounds.second;
+}
 
 
 
@@ -627,6 +645,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
             {
                 _low->insert(key, tree["low"], action, parent, prefix+1, minimize, accuracy, exactness);
                 _high->insert(key, tree["high"], action, parent, prefix+1, minimize, accuracy, exactness);
+                consistent(key.size() + 1);
             }
         }
         else
@@ -802,7 +821,6 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
 void SimpleTree::node_t::consistent(size_t prefix) const
 {
 #ifndef NDEBUG
-    return;
     assert(_parent != this);
     assert(_parent == nullptr || _parent->_low.get() == this || _parent->_high.get() == this);
     assert(_low == nullptr || _low->_parent == this);
