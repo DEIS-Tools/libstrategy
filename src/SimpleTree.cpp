@@ -234,44 +234,33 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
         {
             ++p;
             bool outer = false;
-            size_t q = 0;
-            while(true)
+            std::vector<std::shared_ptr<node_t>> nodes;
+            action_nodes(nodes, 0, parent._actions.size()-1, parent._statevars.size());
+            auto val = std::numeric_limits<double>::infinity();
+            if(!minimization) val *= -1;
+            auto minval = val;
+            auto maxval = -val;
+            for(auto& n : nodes)
             {
-                ++q;
+                auto mm = n->compute_min_max();
+                if(std::isinf(mm.first)) continue;
+                if(minimization)
                 {
-                    std::vector<std::shared_ptr<node_t>> nodes;
-
-                    action_nodes(nodes, 0, parent._actions.size()-1, parent._statevars.size());
-                    auto val = std::numeric_limits<double>::infinity();
-                    if(!minimization) val *= -1;
-                    auto minval = val;
-                    auto maxval = -val;
-                    for(auto& n : nodes)
-                    {
-                        auto mm = n->compute_min_max();
-                        if(std::isinf(mm.first)) continue;
-                        if(minimization)
-                        {
-                            val = std::min(val, mm.second);
-                            minval = std::min(minval, mm.first);
-                            maxval = std::max(maxval, mm.second);
-                        }
-                        else
-                        {
-                            val = std::max(val, mm.first);
-                            minval = std::max(minval, mm.second);
-                            maxval = std::min(maxval, mm.first);
-                        }
-                    }
-                    std::vector<std::pair<double,double>> bounds(parent._pointvars.size(), std::make_pair(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
-                    bool some_rm = false;
-                    for(auto& n : nodes)
-                    {
-                        some_rm |= n->check_tiles(n.get(), nodes, bounds, val, minval, maxval, minimization, parent._statevars.size() + 1);
-                    }
-                    outer |= some_rm;
-                    if(!some_rm) break;
+                    val = std::min(val, mm.second);
+                    minval = std::min(minval, mm.first);
+                    maxval = std::max(maxval, mm.second);
                 }
+                else
+                {
+                    val = std::max(val, mm.first);
+                    minval = std::max(minval, mm.second);
+                    maxval = std::min(maxval, mm.first);
+                }
+            }
+            std::vector<std::pair<double,double>> bounds(parent._pointvars.size(), std::make_pair(-std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity()));
+            for(auto& n : nodes)
+            {
+                outer |= n->check_tiles(n.get(), nodes, bounds, val, minval, maxval, minimization, parent._statevars.size() + 1);
             }
             std::set<std::pair<double,node_t*>> values;
             {
@@ -374,87 +363,51 @@ bool SimpleTree::node_t::subsumes(std::vector<std::pair<double, double> >& bound
 bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<node_t> >& nodes, std::vector<std::pair<double, double> >& bounds, double val, double minval, double maxval, bool minimization, size_t offset) 
 {
     auto obounds = bounds;
-    bool remove = false;
-    if(!remove && is_leaf())
+    if(is_leaf())
     {
-        if(!std::isinf(_cost) && _cost != maxval)
+        double best = std::numeric_limits<double>::infinity();
+        _cost_bounds.first = -std::numeric_limits<double>::infinity();
+        _cost_bounds.second = std::numeric_limits<double>::infinity();
+        if(!minimization)
+            best *= -1;
+        for(auto& n : nodes)
         {
-            if(minimization && val < _cost)
+            if(n.get() == start || n == nullptr) continue;
+            if(n->subsumes(bounds, obounds, _cost, minimization, offset, best, _cost_bounds))
             {
-                remove = true;
-            }
-            else if(!minimization && val > _cost)
-            {
-                remove = true;
-            }
-            else
-            {
-                double best = std::numeric_limits<double>::infinity();
-                _cost_bounds.first = -std::numeric_limits<double>::infinity();
+                _cost = maxval + 1;
                 _cost_bounds.second = std::numeric_limits<double>::infinity();
-                if(!minimization)
-                    best *= -1;
-                for(auto& n : nodes)
-                {
-                    if(n.get() == start || n == nullptr) continue;
-                    if(n->subsumes(bounds, obounds, _cost, minimization, offset, best, _cost_bounds))
-                    {
-                        remove = true;
-                        break;
-                    }
-                    assert(best >= minval);
-                }
-                assert(minval <= best);
-                if(!remove)
-                {
-                    if(best >= _cost)
-                    {
-                        assert(_cost_bounds.first == -std::numeric_limits<double>::infinity() || _cost_bounds.first == _cost);
-                        assert(_cost >= minval);
-                        //std::cerr << "BEST " << _cost << " MV " << minval << " BND " << _cost_bounds.first << ": " << _cost_bounds.second << std::endl;
-                        _cost = minval;
-                    }
-                    else
-                    {
-                        assert(!std::isinf(_cost_bounds.first));
-                        if(_cost_bounds.first != _cost && _cost_bounds.second != _cost) 
-                        {
-                            //std::cerr << "SETTING " << _cost << " TO ";
-                            if(std::isinf(_cost_bounds.first))
-                                assert(false);
-                            else if(std::isinf(_cost_bounds.second))
-                                _cost = maxval;
-                            else
-                                _cost = (_cost_bounds.first + _cost_bounds.second) / 2.0;
-                            assert(_cost < _cost_bounds.second);
-                            //std::cerr << _cost << std::endl;
-                            //std::cerr << _cost_bounds.first << " : " << _cost_bounds.second << std::endl;
-                        }
-                    }
-                }
+                return false;
+            }
+            assert(best >= minval);
+        }
+        assert(minval <= best);
+        if(best >= _cost)
+        {
+            assert(_cost_bounds.first == -std::numeric_limits<double>::infinity() || _cost_bounds.first == _cost);
+            assert(_cost >= minval);
+            //std::cerr << "BEST " << _cost << " MV " << minval << " BND " << _cost_bounds.first << ": " << _cost_bounds.second << std::endl;
+            _cost = minval;
+        }
+        else
+        {
+            assert(!std::isinf(_cost_bounds.first));
+            if(_cost_bounds.first != _cost && _cost_bounds.second != _cost) 
+            {
+                //std::cerr << "SETTING " << _cost << " TO ";
+                if(std::isinf(_cost_bounds.first))
+                    assert(false);
+                else if(std::isinf(_cost_bounds.second))
+                    _cost = maxval + 1;
+                else
+                    _cost = (_cost_bounds.first + _cost_bounds.second) / 2.0;
+                assert(_cost < _cost_bounds.second);
+                /*std::cerr << _cost << std::endl;
+                std::cerr << _cost_bounds.first << " : " << _cost_bounds.second << std::endl;*/
             }
         }
-        else 
-        {
-            remove = true;
-        }
     }
-    
-    if(remove)
-    {
-        bool res = _low != nullptr || _high != nullptr || !std::isinf(_cost);
-        _low = nullptr;
-        _high = nullptr;
-        _limit = std::numeric_limits<double>::infinity();
-        _cost = maxval;
-        if(!minimization) _cost *= -1;
-        _var = std::numeric_limits<uint32_t>::max();
-        _cost_bounds.first = std::numeric_limits<double>::infinity();
-        _cost_bounds.second = -std::numeric_limits<double>::infinity();
-        compute_min_max();
-        return res;
-    }
-    
+        
     if(!is_leaf()) {
         double org = _limit;
         auto& bnd = bounds[_var- offset];
@@ -503,7 +456,7 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
             std::cerr << "FIXING " << std::endl;
             print(std::cerr);
             std::cerr << std::endl;*/
-            _cost = _low->midcost(*_high);
+            _cost = _low->midcost(*_high, minval, maxval);
             //std::cerr << "NC " << _cost << std::endl;
             _low = nullptr;
             _high = nullptr;
@@ -527,7 +480,7 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
             {
                 node = _high;
                 other = _high->_low;
-                nc = other->midcost(*_low);
+                nc = other->midcost(*_low, minval, maxval);
                 assert(!std::isnan(nc));
             } 
             else if( !_low->is_leaf() &&  
@@ -539,7 +492,7 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
             {
                 node = _low;
                 other = _low->_high;
-                nc = other->midcost(*_high);
+                nc = other->midcost(*_high, minval, maxval);
                 assert(!std::isnan(nc));
             }
                        
@@ -562,7 +515,7 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
             {
                 assert(_high->_low->is_leaf());
                 assert(_low->_high->is_leaf());
-                _high->_low->_cost = _low->_high->midcost(*_high->_low);
+                _high->_low->_cost = _low->_high->midcost(*_high->_low, minval, maxval);
                 _var = _low->_var;
                 _limit = _low->_limit;
                 _low = _low->_low;
@@ -582,19 +535,19 @@ bool SimpleTree::node_t::cost_intersect(const node_t& other) const
            other._cost_bounds.first < _cost_bounds.second;
 }
 
-double SimpleTree::node_t::midcost(const node_t& other) const
+double SimpleTree::node_t::midcost(const node_t& other, double minval, double maxval) const
 {
     if(_cost == other._cost) return _cost;
     assert(std::isinf(_cost) == std::isinf(other._cost));
     auto low = std::min(other._cost_bounds.second, _cost_bounds.second);
     auto high = std::max(other._cost_bounds.first, _cost_bounds.first);
     double c = std::ceil(low);
-    if(low == c)
-    {
-        c += 1;
-        if(c >= high)
-            c = (low + high)/2;
-    }
+    if(std::isinf(low))
+        c = minval;
+    else if(std::isinf(high))
+        c = maxval + 1;
+    else
+        c = (low + high)/2;
     return c;
 }
 
