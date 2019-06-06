@@ -491,74 +491,67 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
         if(_cost_bounds.first <= _cost_bounds.second)
         {
             // if both are leafs and can be merged.
-            if(_low && _low->is_leaf() && _high && _high->is_leaf())
+            if(_low->cost_intersect(*_high))
             {
-                if(_low->cost_intersect(*_high))
+                /*std::cerr << "[" << _low->_cost_bounds.first << ", " << _low->_cost_bounds.second << "]" << std::endl;
+                std::cerr << "[" << _high->_cost_bounds.first << ", " << _high->_cost_bounds.second << "]" << std::endl;
+                std::cerr << "[" << _cost_bounds.first << ", " << _cost_bounds.second << "]" << std::endl;
+                std::cerr << "FIXING " << std::endl;
+                print(std::cerr);
+                std::cerr << std::endl;*/
+                if(!std::isinf(_cost_bounds.first) && !std::isinf(_cost_bounds.second))
+                    _cost = (_cost_bounds.first + _cost_bounds.second)/2.0;
+                else if(!std::isinf(_cost_bounds.first))
                 {
-                    /*std::cerr << "[" << _low->_cost_bounds.first << ", " << _low->_cost_bounds.second << "]" << std::endl;
-                    std::cerr << "[" << _high->_cost_bounds.first << ", " << _high->_cost_bounds.second << "]" << std::endl;
-                    std::cerr << "[" << _cost_bounds.first << ", " << _cost_bounds.second << "]" << std::endl;
-                    std::cerr << "FIXING " << std::endl;
-                    print(std::cerr);
-                    std::cerr << std::endl;*/
-                    if(!std::isinf(_cost_bounds.first) && !std::isinf(_cost_bounds.second))
-                        _cost = (_cost_bounds.first + _cost_bounds.second)/2.0;
-                    else if(!std::isinf(_cost_bounds.first))
-                    {
-                        _cost = std::ceil(_cost_bounds.first);
-                        if(_cost == _cost_bounds.first)
-                            _cost += 1;
-                    }
-                    else
-                    {
-                        _cost = minval;
-                    }
-                    _low = nullptr;
-                    _high = nullptr;
-                    _var = std::numeric_limits<typeof(_var)>::max();
-                    _limit = std::numeric_limits<double>::infinity();
-                    res = true;
-                    //std::cerr << "REMO 2" << std::endl;
-                }
-            }
-            else
-            {
-                // check if one is leaf and sibiling has leaf on same side which
-                // can be merged
-                std::shared_ptr<node_t> node, other;
-                if(_low && _low->is_leaf() &&
-                   _high && !_high->is_leaf() &&
-                   _high->_var == _var && _high->_low && _high->_low->is_leaf() && 
-                   _high->_low->cost_intersect(*_low))
-                {
-                    node = _high;
-                    other = _low;
-                }
-
-                if(_high && _high->is_leaf() &&
-                   _low && (!_low->is_leaf() || !std::isinf(_low->_cost)) &&
-                   _low->_var == _var && _low->_high && _low->_high->is_leaf() && 
-                   _low->_high->cost_intersect(*_high))
-                {
-                    node = _low;
-                    other = _high;
-                }
-
-                if(node)
-                {
-                    std::cerr << "REM 3 " << std::endl;
-                    _var = node->_var;
-                    _limit = node->_limit;
-                    _cost = node->_cost;
-                    _low = node->_low;
-                    _high = node->_high;
-                    // no need to update cost-bounds here.
-                    res = true;
+                    _cost = std::ceil(_cost_bounds.first);
+                    if(_cost == _cost_bounds.first)
+                        _cost += 1;
                 }
                 else
                 {
-                   // if(!_low->is_leaf() && _low->_high->)
+                    _cost = minval;
                 }
+                _low = nullptr;
+                _high = nullptr;
+                _var = std::numeric_limits<typeof(_var)>::max();
+                _limit = std::numeric_limits<double>::infinity();
+                return true;
+                //std::cerr << "REMO 2" << std::endl;
+            }
+        }
+
+        {
+            // check if one is leaf and sibiling has leaf on same side which
+            // can be merged
+            std::shared_ptr<node_t> node, other;
+            if(!_high->is_leaf() && 
+               _high->_var == _var &&               
+               _high->_low->cost_intersect(*_low))
+            {
+                node = _high;
+                other = _low;
+            } else if( !_low->is_leaf() &&  
+                        _low->_var == _var &&
+                        _low->_high->cost_intersect(*_high))
+            {
+                node = _low;
+                other = _high;
+            }
+ 
+            if(node)
+            {
+                std::cerr << "REM 3 " << std::endl;
+                _var = node->_var;
+                _limit = node->_limit;
+                _cost = node->_cost;
+                _low = node->_low;
+                _high = node->_high;
+                // no need to update cost-bounds here.
+                res = true;
+            }
+            else
+            {
+               // if(!_low->is_leaf() && _low->_high->)
             }
         }
         return res;
