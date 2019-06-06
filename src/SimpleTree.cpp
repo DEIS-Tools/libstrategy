@@ -390,15 +390,14 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
             else
             {
                 double best = std::numeric_limits<double>::infinity();
-                std::pair<double,double> closest;
-                closest.first = -std::numeric_limits<double>::infinity();
-                closest.second = std::numeric_limits<double>::infinity();
+                _cost_bounds.first = -std::numeric_limits<double>::infinity();
+                _cost_bounds.second = std::numeric_limits<double>::infinity();
                 if(!minimization)
                     best *= -1;
                 for(auto& n : nodes)
                 {
                     if(n.get() == start || n == nullptr) continue;
-                    if(n->subsumes(bounds, obounds, _cost, minimization, offset, best, closest))
+                    if(n->subsumes(bounds, obounds, _cost, minimization, offset, best, _cost_bounds))
                     {
                         remove = true;
                         break;
@@ -410,36 +409,21 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                 {
                     if(best >= _cost)
                     {
-                        assert(closest.first == -std::numeric_limits<double>::infinity() || closest.first == _cost);
+                        assert(_cost_bounds.first == -std::numeric_limits<double>::infinity() || _cost_bounds.first == _cost);
                         assert(_cost >= minval);
                         _cost = minval;
                     }
                     else
                     {
-                        assert(!std::isinf(closest.first));
-                        if(_parent && _parent->_low->is_leaf() && _parent->_high->is_leaf() && _parent->_var >= offset)
+                        assert(!std::isinf(_cost_bounds.first));
+                        if(_cost_bounds.first != _cost_bounds.second) 
                         {
-                            auto val = _parent->_low->_cost;
-                            if(_parent->_low.get() == this)
-                                val = _parent->_high->_cost;
-                            if(closest.first < val && val < closest.second && !std::isinf(val))
-                            {
-                                _parent->_cost = val;
-                                _parent->_var = std::numeric_limits<typeof(_parent->_var)>::max();
-                                _parent->_limit = std::numeric_limits<double>::infinity();
-                                _parent->_low = nullptr;
-                                _parent->_high = nullptr;
-                                return true;
-                            }
-                        }
-                        if(closest.first != closest.second) 
-                        {
-                            _cost = std::ceil(closest.first);         
-                            if(_cost == closest.first)
+                            _cost = std::ceil(_cost_bounds.first);         
+                            if(_cost == _cost_bounds.first)
                                 _cost += 1;
-                            if(_cost >= closest.second)
-                                _cost = (closest.first + closest.second) / 2.0;
-                            assert(_cost < closest.second);
+                            if(_cost >= _cost_bounds.second)
+                                _cost = (_cost_bounds.first + _cost_bounds.second) / 2.0;
+                            assert(_cost < _cost_bounds.second);
                         }
                     }
                 }
@@ -492,47 +476,66 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                 res |= _high->check_tiles(start, nodes, bounds, val, minval, minimization, offset);
             std::swap(org, bnd.first);
         }
-        /*if(_low && _low->is_leaf() && _high && _high->is_leaf())
+        _cost_bounds.first = std::max(_low->_cost_bounds.first, _high->_cost_bounds.first);
+        _cost_bounds.second = std::min(_low->_cost_bounds.second, _high->_cost_bounds.second);
+        if(_low->_cost_bounds.first <= _low->_cost_bounds.second && 
+           _high->_cost_bounds.first <= _high->_cost_bounds.second)
         {
-            if(_low->_cost == _high->_cost)
+            if(_low && _low->is_leaf() && _high && _high->is_leaf())
             {
-                _cost = _low->_cost;
-                _low = nullptr;
-                _high = nullptr;
-                _var = std::numeric_limits<typeof(_var)>::max();
-                _limit = std::numeric_limits<double>::infinity();
-                res = true;
-                std::cerr << "REMO 2" << std::endl;
+                if(_low->_cost_bounds.first < _high->_cost_bounds.second && 
+                   _high->_cost_bounds.first < _low->_cost_bounds.second)
+                {
+                    if(!std::isinf(_cost_bounds.first) && !std::isinf(_cost_bounds.second))
+                        _cost = (_cost_bounds.first + _cost_bounds.second)/2.0;
+                    else if(!std::isinf(_cost_bounds.first))
+                    {
+                        _cost = std::ceil(_cost_bounds.first);
+                        if(_cost == _cost_bounds.first)
+                            _cost += 1;
+                    }
+                    else
+                    {
+                        _cost = minval;
+                    }
+                    _low = nullptr;
+                    _high = nullptr;
+                    _var = std::numeric_limits<typeof(_var)>::max();
+                    _limit = std::numeric_limits<double>::infinity();
+                    res = true;
+                    //std::cerr << "REMO 2" << std::endl;
+                }
             }
-        }
-        else
-        {
-            std::shared_ptr<node_t> node;
-            if(_low && _low->is_leaf() &&
-               _high && (!_high->is_leaf() || !std::isinf(_high->_cost)) &&
-               _high->_var == _var && _high->_low && _high->_low->is_leaf() && _high->_low->_cost == _low->_cost)
+            /*else
             {
-                node = _high;
-            }
+                std::shared_ptr<node_t> node;
+                if(_low && _low->is_leaf() &&
+                   _high && !_high->is_leaf() &&
+                   _high->_var == _var && _high->_low && _high->_low->is_leaf() && 
+                   _high->_low->_cost == _low->_cost)
+                {
+                    node = _high;
+                }
 
-            if(_high && _high->is_leaf() &&
-               _low && (!_low->is_leaf() || !std::isinf(_low->_cost)) &&
-               _low->_var == _var && _low->_high && _low->_high->is_leaf() && _low->_high->_cost == _high->_cost)
-            {
-                node = _low;
-            }
-            
-            if(node)
-            {
-                std::cerr << "REM 3 " << std::endl;
-                _var = node->_var;
-                _limit = node->_limit;
-                _cost = node->_cost;
-                _low = nullptr;
-                _high = nullptr;
-                res = true;
-            }
-        }*/
+                if(_high && _high->is_leaf() &&
+                   _low && (!_low->is_leaf() || !std::isinf(_low->_cost)) &&
+                   _low->_var == _var && _low->_high && _low->_high->is_leaf() && _low->_high->_cost == _high->_cost)
+                {
+                    node = _low;
+                }
+
+                if(node)
+                {
+                    std::cerr << "REM 3 " << std::endl;
+                    _var = node->_var;
+                    _limit = node->_limit;
+                    _cost = node->_cost;
+                    _low = nullptr;
+                    _high = nullptr;
+                    res = true;
+                }
+            }*/
+        }
         return res;
     }
     return false;
