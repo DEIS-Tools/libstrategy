@@ -245,7 +245,7 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
                     auto val = std::numeric_limits<double>::infinity();
                     if(!minimization) val *= -1;
                     auto minval = val;
-                    auto maxval = val;
+                    auto maxval = -val;
                     for(auto& n : nodes)
                     {
                         auto mm = n->compute_min_max();
@@ -411,19 +411,24 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                     {
                         assert(_cost_bounds.first == -std::numeric_limits<double>::infinity() || _cost_bounds.first == _cost);
                         assert(_cost >= minval);
+                        //std::cerr << "BEST " << _cost << " MV " << minval << " BND " << _cost_bounds.first << ": " << _cost_bounds.second << std::endl;
                         _cost = minval;
                     }
                     else
                     {
                         assert(!std::isinf(_cost_bounds.first));
-                        if(_cost_bounds.first != _cost_bounds.second) 
+                        if(_cost_bounds.first != _cost && _cost_bounds.second != _cost) 
                         {
-                            _cost = std::ceil(_cost_bounds.first);         
-                            if(_cost == _cost_bounds.first)
-                                _cost += 1;
-                            if(_cost >= _cost_bounds.second)
+                            //std::cerr << "SETTING " << _cost << " TO ";
+                            if(std::isinf(_cost_bounds.first))
+                                assert(false);
+                            else if(std::isinf(_cost_bounds.second))
+                                _cost = maxval;
+                            else
                                 _cost = (_cost_bounds.first + _cost_bounds.second) / 2.0;
                             assert(_cost < _cost_bounds.second);
+                            //std::cerr << _cost << std::endl;
+                            //std::cerr << _cost_bounds.first << " : " << _cost_bounds.second << std::endl;
                         }
                     }
                 }
@@ -490,7 +495,7 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
         _cost_bounds.second = std::min(_low->_cost_bounds.second, _high->_cost_bounds.second);
             // if both are leafs and can be merged.
         if(_low->is_leaf() && _high->is_leaf() && _low->cost_intersect(*_high) &&
-           std::isinf(_low->_cost) == std::isinf(_high->_cost) && false)
+           std::isinf(_low->_cost) == std::isinf(_high->_cost))
         {
             /*std::cerr << "[" << _low->_cost_bounds.first << ", " << _low->_cost_bounds.second << "]" << std::endl;
             std::cerr << "[" << _high->_cost_bounds.first << ", " << _high->_cost_bounds.second << "]" << std::endl;
@@ -499,6 +504,7 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
             print(std::cerr);
             std::cerr << std::endl;*/
             _cost = _low->midcost(*_high);
+            //std::cerr << "NC " << _cost << std::endl;
             _low = nullptr;
             _high = nullptr;
             _var = std::numeric_limits<typeof(_var)>::max();
@@ -509,7 +515,7 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
 
         if(false) {
             // check if one is leaf and sibiling has leaf on same side which
-            // can be merged
+            // can be merged:
             double nc = 0;
             std::shared_ptr<node_t> node, other;
             if(!_high->is_leaf() && 
