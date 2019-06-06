@@ -444,6 +444,8 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
         _cost = std::numeric_limits<double>::infinity();
         if(!minimization) _cost *= -1;
         _var = std::numeric_limits<uint32_t>::max();
+        _cost_bounds.first = std::numeric_limits<double>::infinity();
+        _cost_bounds.second = -std::numeric_limits<double>::infinity();
         compute_min_max();
         return res;
     }
@@ -460,6 +462,9 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
         {
             switchnode = _high;
         }
+/*        std::cerr << "HANDLE " << std::endl;
+        print(std::cerr);
+        std::cerr << std::endl;*/
         bool res = false;
         if(switchnode)
         {
@@ -486,6 +491,12 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                 if(_low->_cost_bounds.first < _high->_cost_bounds.second && 
                    _high->_cost_bounds.first < _low->_cost_bounds.second)
                 {
+                    /*std::cerr << "[" << _low->_cost_bounds.first << ", " << _low->_cost_bounds.second << "]" << std::endl;
+                    std::cerr << "[" << _high->_cost_bounds.first << ", " << _high->_cost_bounds.second << "]" << std::endl;
+                    std::cerr << "[" << _cost_bounds.first << ", " << _cost_bounds.second << "]" << std::endl;
+                    std::cerr << "FIXING " << std::endl;
+                    print(std::cerr);
+                    std::cerr << std::endl;*/
                     if(!std::isinf(_cost_bounds.first) && !std::isinf(_cost_bounds.second))
                         _cost = (_cost_bounds.first + _cost_bounds.second)/2.0;
                     else if(!std::isinf(_cost_bounds.first))
