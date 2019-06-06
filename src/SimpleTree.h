@@ -58,8 +58,6 @@ private:
         uint32_t _var = std::numeric_limits<uint32_t>::max();
         double _limit = -std::numeric_limits<double>::infinity();
         double _cost = std::numeric_limits<double>::infinity();
-        double _mincost = std::numeric_limits<double>::infinity();
-        double _maxcost = -std::numeric_limits<double>::infinity();
         std::shared_ptr<node_t> _low;
         std::shared_ptr<node_t> _high;
         node_t* _parent;

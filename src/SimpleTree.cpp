@@ -54,6 +54,13 @@ SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactn
         throw base_error("Expected actions object");
     // store actions
     SimpleTree tree;
+    if(tree._root == nullptr)
+    {
+        tree._root = std::make_shared<node_t>();
+        tree._root->_limit = -std::numeric_limits<double>::infinity();
+        tree._root->_cost = std::numeric_limits<double>::infinity();
+        tree._root->_var = std::numeric_limits<uint32_t>::max();
+    }    
     tree._actions.resize(raw["actions"].size());
     for(auto it = raw["actions"].begin(); it != raw["actions"].end(); ++it)
     {
@@ -74,6 +81,9 @@ SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactn
         throw base_error("Expected regressors as object");
     auto& regressors = raw["regressors"];
     int minim = -1;
+    typeof(raw) inf = "inf";
+
+    bool first_element = true;
     for(auto it = regressors.begin(); it != regressors.end(); ++it)
     {
         auto key = parse_key(it.key());
@@ -100,6 +110,12 @@ SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactn
             minim = is_minimize;
         if(minim != is_minimize)
             throw base_error("Expected all sub-regressors to have same minimization flag");
+        if(first_element)
+            if(!is_minimize) tree._root->_cost *= -1;
+        first_element = false;
+        // make sure all actions are mapped initially
+        for(size_t i = 0; i < tree._actions.size(); ++i)
+            tree._root->insert(key, inf, i, tree, 0, is_minimize, 0, 0);
         for(auto iit = reg["regressor"].begin(); iit != reg["regressor"].end(); ++iit)
         {
             size_t action = atoi(iit.key().c_str());
@@ -154,24 +170,27 @@ std::vector<double> SimpleTree::parse_key(const std::string& key) {
 }
 
 std::pair<double, double> SimpleTree::node_t::compute_min_max() {
+    double mincost = std::numeric_limits<double>::infinity();
+    double maxcost = -1*mincost;
     if(_low)
     {
         auto r = _low->compute_min_max();
-        _mincost = std::min(r.first, _mincost);
-        _maxcost = std::max(r.second, _maxcost);
+        mincost = std::min(r.first, mincost);
+        maxcost = std::max(r.second, maxcost);
     }
     if(_high)
     {
         auto r = _high->compute_min_max();
-        _mincost = std::min(r.first, _mincost);
-        _maxcost = std::max(r.second, _maxcost);        
+        mincost = std::min(r.first, mincost);
+        maxcost = std::max(r.second, maxcost);        
     }
-    if(!std::isinf(_cost) && !std::isnan(_cost))
+    
+    if(is_leaf())
     {
-        _mincost = std::min(_cost, _mincost);
-        _maxcost = std::max(_cost, _maxcost);                
+        mincost = std::min(_cost, mincost);
+        maxcost = std::max(_cost, maxcost);
     }
-    return std::make_pair(_mincost, _maxcost);
+    return std::make_pair(mincost, maxcost);
 }
 
 void SimpleTree::node_t::action_nodes(std::vector<std::shared_ptr<node_t>>& nodes, uint32_t low, uint32_t high, uint32_t varid) {
@@ -219,7 +238,6 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
             while(true)
             {
                 ++q;
-                std::cerr << "IT NO " << q << " P=" << p<< std::endl;
                 {
                     std::vector<std::shared_ptr<node_t>> nodes;
 
@@ -230,14 +248,7 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
                     for(auto& n : nodes)
                     {
                         auto mm = n->compute_min_max();
-                        if(std::isinf(mm.first))
-                        {
-                            exit(0);
-                        }
-                        if(std::isinf(n->_mincost))
-                        {
-                            exit(0);
-                        }
+                        if(std::isinf(mm.first)) continue;
                         if(minimization)
                         {
                             val = std::min(val, mm.second);
@@ -256,39 +267,12 @@ void SimpleTree::node_t::subsumption_reduction(bool minimization, SimpleTree& pa
                     bool some_rm = false;
                     for(auto& n : nodes)
                     {
-                        bool skip = false;
-                        if(std::isinf(n->_mincost))
-                        {
-                            std::cerr << "ERROR" << std::endl;
-                            exit(0);
-                        }
-                        if(minimization && val < n->_mincost)
-                            skip = true;
-                        else if(!minimization && val > n->_maxcost)
-                            skip = true;
-                        if(skip)
-                        {
-                            if(n->_low || n->_high || !std::isinf(n->_cost)) some_rm = true;
-                            n->_low = nullptr;
-                            n->_high = nullptr;
-                            n->_var = std::numeric_limits<uint32_t>::max();
-                            n->_limit = std::numeric_limits<double>::infinity();
-                            n->_cost = std::numeric_limits<double>::infinity();
-                            if(!minimization)
-                                n->_cost *= -1; 
-                            n->_mincost = std::numeric_limits<double>::infinity();
-                            n->_maxcost = -std::numeric_limits<double>::infinity();
-                        }
-                        else
-                        {
-                            some_rm |= n->check_tiles(n.get(), nodes, bounds, val, minval, minimization, parent._statevars.size() + 1);
-                        }
+                        some_rm |= n->check_tiles(n.get(), nodes, bounds, val, minval, minimization, parent._statevars.size() + 1);
                     }
                     outer |= some_rm;
                     if(!some_rm) break;
                 }
             }
-            break;
             std::set<std::pair<double,node_t*>> values;
             {
                 std::vector<std::shared_ptr<node_t>> nodes(parent._actions.size());        
@@ -391,7 +375,6 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
 {
     auto obounds = bounds;
     bool remove = false;
-    
     if(!remove && is_leaf())
     {
         if(!std::isinf(_cost))
@@ -423,43 +406,41 @@ bool SimpleTree::node_t::check_tiles(node_t* start, std::vector<std::shared_ptr<
                     assert(best >= minval);
                 }
                 assert(minval <= best);
-                if(best >= _cost && !remove)
+                if(!remove)
                 {
-                    assert(closest.first == -std::numeric_limits<double>::infinity() || closest.first == _cost);
-                    assert(_cost >= minval);
-                    if(std::isinf(closest.first) && std::isinf(closest.second))
+                    if(best >= _cost)
                     {
-                        std::cerr << "BOUNDS [" << closest.first << ", " << closest.second << "] :: " << _cost << std::endl;
+                        assert(closest.first == -std::numeric_limits<double>::infinity() || closest.first == _cost);
+                        assert(_cost >= minval);
+                        _cost = minval;
                     }
-                    _cost = minval;
-                }
-                else if(!remove)
-                {
-                    assert(!std::isinf(closest.first));
-                    //std::cerr << "BOUNDS [" << closest.first << ", " << closest.second << "] :: " << _cost << std::endl;
-                    if(_parent && _parent->_low->is_leaf() && _parent->_high->is_leaf() && _parent->_var >= offset)
+                    else
                     {
-                        auto val = _parent->_low->_cost;
-                        if(_parent->_low.get() == this)
-                            val = _parent->_high->_cost;
-                        if(closest.first <= val && val <= closest.second && !std::isinf(val))
+                        assert(!std::isinf(closest.first));
+                        if(_parent && _parent->_low->is_leaf() && _parent->_high->is_leaf() && _parent->_var >= offset)
                         {
-                            _parent->_cost = val;
-                            _parent->_var = std::numeric_limits<typeof(_parent->_var)>::max();
-                            _parent->_limit = std::numeric_limits<double>::infinity();
-                            _parent->_low = nullptr;
-                            _parent->_high = nullptr;
-                            std::cerr << "REMO" << std::endl;
-                            return true;
+                            auto val = _parent->_low->_cost;
+                            if(_parent->_low.get() == this)
+                                val = _parent->_high->_cost;
+                            if(closest.first < val && val < closest.second && !std::isinf(val))
+                            {
+                                _parent->_cost = val;
+                                _parent->_var = std::numeric_limits<typeof(_parent->_var)>::max();
+                                _parent->_limit = std::numeric_limits<double>::infinity();
+                                _parent->_low = nullptr;
+                                _parent->_high = nullptr;
+                                return true;
+                            }
                         }
-                    }
-                    auto diff = closest.second - closest.first;
-                    if(diff > 1)
-                    {
-                        _cost = std::ceil(closest.first);
-                        if(_cost == closest.first)
-                            _cost += 1;
-                        assert(_cost < closest.second);
+                        if(closest.first != closest.second) 
+                        {
+                            _cost = std::ceil(closest.first);         
+                            if(_cost == closest.first)
+                                _cost += 1;
+                            if(_cost >= closest.second)
+                                _cost = (closest.first + closest.second) / 2.0;
+                            assert(_cost < closest.second);
+                        }
                     }
                 }
             }
@@ -765,6 +746,10 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                     tmp->consistent(key.size() + 1);
                     tmp->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
                     consistent(key.size() + 1);
+                }
+                else if(_high->_var == prefix && _high->_limit == action)
+                {
+                    _high->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
                 }
                 else
                 {
@@ -1175,9 +1160,9 @@ std::ostream& SimpleTree::node_t::print_c(std::ostream& stream, size_t disc, std
     if(is_leaf())
     {
     //    for(size_t i = 0; i < tabs+1; ++i) stream << "\t";
-//        if(!std::isinf(_cost))
+        if(!std::isinf(_cost))
             stream << "return " << _cost << ";" << std::endl;
-//        else stream << "{}";
+        else stream << "{}";
         return stream;
     }
     if(std::isinf(_limit))
@@ -1203,9 +1188,9 @@ std::ostream& SimpleTree::node_t::print_c(std::ostream& stream, size_t disc, std
         _low->print_c_nested(stream, disc, tabs + 1, toprint, _low);
     else
     {
-//        if(!std::isinf(_cost))
+        if(!std::isinf(_cost))
             stream << "return " << _cost << ";";
-//        else stream << "{}";
+        else stream << "{}";
     }
     stream << "\n";
 //    for(size_t i = 0; i < tabs+1; ++i) stream << "\t";
@@ -1214,9 +1199,9 @@ std::ostream& SimpleTree::node_t::print_c(std::ostream& stream, size_t disc, std
         _high->print_c_nested(stream, disc, tabs + 1, toprint, _high);
     else
     {
-//        if(!std::isinf(_cost))
+        if(!std::isinf(_cost))
             stream << "return " << _cost << ";";
-//        else stream << "{}";
+        else stream << "{}";
     }
     stream << "\n";
     for(auto n : toprint)
@@ -1229,9 +1214,9 @@ std::ostream& SimpleTree::node_t::print_c_nested(std::ostream& stream, size_t di
     assert(node.get() == this);
     if(is_leaf() && std::isinf(_limit))
     {
-//        if(!std::isinf(_cost))
+        if(!std::isinf(_cost))
             stream << "return " << _cost << ";";
-//        else stream << "{}";
+        else stream << "{}";
         return stream;
     }
     if(node.use_count() == 1)
@@ -1252,9 +1237,9 @@ std::ostream& SimpleTree::node_t::print_c_nested(std::ostream& stream, size_t di
             _low->print_c_nested(stream, disc, tabs + 1, toprint, _low);
         else
         {
-//            if(!std::isinf(_cost))
+            if(!std::isinf(_cost))
                 stream << "return " << _cost << ";";
-//            else stream << "{}";
+            else stream << "{}";
         }
         stream << "\n";
         //for(size_t i = 0; i < tabs; ++i) stream << "\t";
@@ -1263,9 +1248,9 @@ std::ostream& SimpleTree::node_t::print_c_nested(std::ostream& stream, size_t di
             _high->print_c_nested(stream, disc, tabs + 1, toprint, _high);
         else
         {
-//            if(!std::isinf(_cost))
+            if(!std::isinf(_cost))
                 stream << "return " << _cost << ";";
-//            else stream << "{}";
+            else stream << "{}";
         }
         stream << "\n";
         //for(size_t i = 0; i < tabs-1; ++i) stream << "\t";
