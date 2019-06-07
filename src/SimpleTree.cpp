@@ -34,8 +34,12 @@
 #include <unordered_set>
 
 using json = nlohmann::json;
-
-SimpleTree SimpleTree::parse(std::istream& input, double accuracy, std::vector<double>& exactness) 
+SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumption, double accuracy) 
+{
+    std::vector<double> empty;
+    return parse(input, simplify, subsumption, accuracy, empty);
+}
+SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumption, double accuracy, std::vector<double>& exactness) 
 {
     auto raw = json::parse(input);
     if(!raw.is_object())
@@ -136,13 +140,15 @@ SimpleTree SimpleTree::parse(std::istream& input, double accuracy, std::vector<d
         }
     }
     tree._is_minimization = minim != 0;
-    tree._root->subsumption_reduction(minim, tree);
-    ptrie::map<std::shared_ptr<node_t>> nodemap;
-    if(tree._root)
-        tree._root = tree._root->simplify(true, nodemap, tree);
-    if(tree._root)
-        tree._root->_parent = nullptr;
-    std::cerr << "GOT " << nodemap.size() << " NODES " << std::endl;
+    if(subsumption) tree._root->subsumption_reduction(minim, tree);
+    if(simplify)
+    {
+        ptrie::map<std::shared_ptr<node_t>> nodemap;
+        if(tree._root)
+            tree._root = tree._root->simplify(true, nodemap, tree);
+        if(tree._root)
+            tree._root->_parent = nullptr;
+    }
     return tree;
 }
 

@@ -113,7 +113,7 @@ void* parse_learned(const char* file)
     }
     std::cerr << "PARSING " << fn << std::endl;
     std::vector<double> exactness;
-    auto res = new SimpleTree(SimpleTree::parse(instream, 0, exactness));
+    auto res = new SimpleTree(SimpleTree::parse(instream, true, true, 0, exactness));
     return res;
 }
 

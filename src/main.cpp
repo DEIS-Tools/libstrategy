@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     for(auto e : exactness)
         std::cerr << e<< " , ";
     std::cerr << std::endl;
-    auto learned_strategy = SimpleTree::parse(lstream, accuracy, exactness);
+    auto learned_strategy = SimpleTree::parse(lstream, true, true, accuracy, exactness);
     //strategy.filter(learned_strategy);
     learned_strategy.print_c(std::cout, learned_name);
     return 0;
