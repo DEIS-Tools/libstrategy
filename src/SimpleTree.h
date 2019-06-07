@@ -40,7 +40,7 @@ class SimpleTree {
 public:
     SimpleTree(const SimpleTree& orig) = default;
     virtual ~SimpleTree() = default;
-    static SimpleTree parse(std::istream&, double accuracy = 0.0, double exactness = 0.0);
+    static SimpleTree parse(std::istream&, double accuracy, std::vector<double>& exactness);
     std::ostream& print(std::ostream& stream) const;
     std::ostream& print_c(std::ostream& stream, std::string name) const;
     double value(const double* disc, const double* cont, uint32_t action) const;
@@ -62,7 +62,7 @@ private:
         std::shared_ptr<node_t> _low;
         std::shared_ptr<node_t> _high;
         node_t* _parent;
-        void insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize, double accuracy, double exactness);
+        void insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize, double accuracy, std::vector<double>& exactness);
         std::ostream& print(std::ostream& out, size_t tabs = 0) const;
         bool is_leaf() const;
         std::shared_ptr<node_t> simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap, SimpleTree& parent);

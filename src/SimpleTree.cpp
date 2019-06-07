@@ -35,7 +35,7 @@
 
 using json = nlohmann::json;
 
-SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactness) 
+SimpleTree SimpleTree::parse(std::istream& input, double accuracy, std::vector<double>& exactness) 
 {
     auto raw = json::parse(input);
     if(!raw.is_object())
@@ -115,7 +115,7 @@ SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactn
         first_element = false;
         // make sure all actions are mapped initially
         for(size_t i = 0; i < tree._actions.size(); ++i)
-            tree._root->insert(key, inf, i, tree, 0, is_minimize, 0, 0);
+            tree._root->insert(key, inf, i, tree, 0, is_minimize, 0, exactness);
         for(auto iit = reg["regressor"].begin(); iit != reg["regressor"].end(); ++iit)
         {
             size_t action = atoi(iit.key().c_str());
@@ -132,7 +132,7 @@ SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactn
             }
             
             auto obj = iit.value();
-            tree._root->insert(key, obj, action, tree, 0, is_minimize, accuracy != 0 ? 1.0/accuracy : 0, exactness != 0 ? 1.0/exactness : 0);
+            tree._root->insert(key, obj, action, tree, 0, is_minimize, accuracy, exactness);
         }
     }
     tree._is_minimization = minim != 0;
@@ -142,6 +142,7 @@ SimpleTree SimpleTree::parse(std::istream& input, double accuracy, double exactn
         tree._root = tree._root->simplify(true, nodemap, tree);
     if(tree._root)
         tree._root->_parent = nullptr;
+    std::cerr << "GOT " << nodemap.size() << " NODES " << std::endl;
     return tree;
 }
 
@@ -562,7 +563,7 @@ double SimpleTree::node_t::midcost(const node_t& other, double minval, double ma
 
 
 
-void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize, double accuracy, double exactness)
+void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize, double accuracy, std::vector<double>& exactness)
 {    
     if((tree.is_number() || tree.is_string()) && key.size() < prefix)
     {
@@ -578,7 +579,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
             else
                 _cost = std::isinf(_cost) ? nc : std::max(nc, _cost);
             if(accuracy != 0)
-                _cost = std::round(_cost*accuracy)/accuracy;
+                _cost = std::round(_cost/accuracy)*accuracy;
         }
         else
         {
@@ -622,9 +623,10 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
             else
             {
                 _var = key.size() + 1 + tree["var"].get<uint32_t>();
+                auto ivar = tree["var"].get<uint32_t>();
                 _limit = tree["bound"].get<double>();
-                if(exactness != 0)
-                    _limit = std::round(_limit*exactness)/exactness;
+                if(exactness.size() > ivar && exactness[ivar] != 0)
+                    _limit = std::round(_limit/exactness[ivar])*exactness[ivar];
             }
             consistent(key.size() + 1);
             if(prefix <= key.size())
@@ -656,9 +658,12 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
         }
         else
         {
+            size_t ivar = tree["var"].get<uint32_t>();
             double bound = tree["bound"].get<double>();
-            if(exactness != 0)
-                bound = std::round(bound*exactness)/exactness;
+            if(exactness.size() > ivar && exactness[ivar] != 0)
+            {
+                bound = std::round(bound/exactness[ivar])*exactness[ivar];
+            }
             if(_limit == bound)
             {
                 _low->insert(key, tree["low"], action, parent, prefix+1, minimize, accuracy, exactness);
