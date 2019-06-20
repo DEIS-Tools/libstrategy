@@ -91,13 +91,15 @@ SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumptio
     for(auto it = regressors.begin(); it != regressors.end(); ++it)
     {
         auto key = parse_key(it.key());
-        if(key.size() != tree._statevars.size())
+        if(key.size() != tree._statevars.size() && (tree._statevars.size() != 0 || key[0] != 1.0))
         {
             std::cerr << it.key() << std::endl;
             std::cerr << key.size() << std::endl;
             std::cerr << tree._statevars.size() << std::endl;
             throw base_error("Expected cardinality of key does not match cardinality of statevars");
         }
+        else if(tree._statevars.size() == 0)
+            key.clear();
         
 
         if(!it.value().is_object())
