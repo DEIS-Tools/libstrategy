@@ -19,5 +19,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/ptrie)
+# Unset Boost_ROOT here if set, not needed for JSON or source of strategy
+unset(Boost_ROOT)
 add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/json)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/)
