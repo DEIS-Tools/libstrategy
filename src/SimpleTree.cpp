@@ -1151,24 +1151,111 @@ std::ostream& SimpleTree::node_t::print(std::ostream& out, size_t tabs) const {
 
 std::ostream& SimpleTree::print_c(std::ostream& stream, std::string name) const
 {
+    if(_root == nullptr)
+    {
+        stream << "double " << name << "(unsigned int action, const double* disc, const double* vars)\n{\n";
+        stream << "\treturn 0 ; \n}\n";
+        return stream;
+    }
+    std::unordered_map<size_t,const node_t*> _idnode;
+    std::unordered_map<const node_t*,size_t> _nodeid;
+    _idnode[0] = _root.get();
+    _nodeid[_root.get()] = 0;
+    
+    size_t lid = 0;
+    while(lid != _nodeid.size())
+    {
+        auto n = _idnode[lid];
+        if(!n->is_leaf())
+        {
+            auto ln = n->_low.get();
+            auto hn = n->_high.get();
+            if(_nodeid.count(ln) == 0)
+            {
+                auto id = _idnode.size();
+                _idnode[id] = ln;
+                _nodeid[ln] = id;
+            }
+            if(_nodeid.count(hn) == 0)
+            {
+                auto id = _idnode.size();
+                _idnode[id] = hn;
+                _nodeid[hn] = id;
+            }
+        }
+        ++lid;
+    }
+    
+    stream << "const int " << name << "_nodes[] = {";
+    for(size_t i = 0; i < lid; ++i)
+    {
+        if(i != 0) stream << ",";
+        auto n = _idnode[i];
+        if(n->is_leaf()) 
+        {
+            stream << "-1,-1,-1";
+        }
+        else
+        {
+            stream << _nodeid[n->_low.get()] << ",";
+            stream << _nodeid[n->_high.get()] << ",";
+            stream << n->_var;
+        }
+    }
+    stream << "};\n";
+    auto mm = _root->compute_min_max();
+    auto v = is_minimization() ? mm.second + 1 : mm.first -1;
+    stream << "const double " << name << "_values[] = {";
+    for(size_t i = 0; i < lid; ++i)
+    {
+        if(i != 0) stream << ",";
+        auto n = _idnode[i];
+        if(n->is_leaf()) 
+        {
+            if(!std::isinf(n->_cost) && !std::isnan(n->_cost))
+                stream << n->_cost;
+            else
+                stream << v;
+        }
+        else
+        {
+            stream << n->_limit;
+        }        
+    }
+    stream << "};\n";
     stream << "double " << name << "(unsigned int action, const double* disc, const double* vars)\n{\n";
-    stream << "\tconst double inf = INFINITY;\n";
     //stream << "\t// Depth = " << _root->depth() << std::endl;
     stream << "\t// Actions = " << _actions.size() << std::endl;
     stream << "\t// Disc = " << _statevars.size() << std::endl;
     stream << "\t// Cont = " << _pointvars.size() << std::endl;
-    
-    std::unordered_set<const node_t*> printed;
+    stream << "\t// Nodes = " << lid << std::endl;
+    /*std::unordered_set<const node_t*> printed;
     std::vector<const node_t*> toprint;
     if(_root)
         _root->print_c_nested(stream, _statevars.size(), 1, toprint, _root);
-    stream << "\treturn inf;\n";
+    auto mm = _root->compute_min_max();
+    auto v = is_minimization() ? mm.second + 1 : mm.first -1;
+    stream << "\treturn " << v << ";\n";
     for(auto n : toprint)
     {
         n->print_c(stream, 0, printed, 1);
-        stream << "\treturn inf;\n";
+        stream << "\treturn " << v << ";\n";
     }
-    stream << "\treturn inf;\n";
+    stream << "\treturn " << v << ";\n";
+     * */
+    stream << "\tint ins = 0;\n\twhile(true) {\n";
+    stream << "\t\tint l = " << name << "_nodes[ins*3]; int h = " << name << "_nodes[1+(ins*3)]; int v = " << name << "_nodes[2+(ins*3)];\n";
+    stream << "\t\tif(v == -1) return " << name << "_values[ins];\n";
+    stream << "\t\tdouble val = 0;\n";
+    stream << "\t\tif(v == " << _statevars.size() << ") val = action;\n";
+    stream << "\t\telse if(v > " << _statevars.size() << ") val = vars[v-" << (_statevars.size()+1) << "];\n";
+    stream << "\t\telse val = disc[v];\n";
+    stream << "\t\tif(val <= " << name << "_values[ins])\n";
+    stream << "\t\t\tins = l;\n";
+    stream << "\t\telse\n";
+    stream << "\t\t\tins = h;\n";
+    stream << "\t}\n";
+    stream << "\treturn " << v << ";\n";
     stream << "}\n";
     return stream;
 }
