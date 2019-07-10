@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
 cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0069 NEW)
+cmake_policy(SET CMP0074 NEW)
 
 set(CMAKE_CXX_STANDARD 17)
 if (NOT CMAKE_BUILD_TYPE)
