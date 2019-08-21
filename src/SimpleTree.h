@@ -33,7 +33,7 @@
 #include <unordered_set>
 #include <set>
 
-#include <ptrie/ptrie_map.h>
+#include <ptrie_map.h>
 #include <nlohmann/json.hpp>
 
 class SimpleTree {

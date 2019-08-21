@@ -39,7 +39,9 @@
 class ZonotopStrategy {
 public:
     ZonotopStrategy(const ZonotopStrategy& orig) = default;
+    ZonotopStrategy(ZonotopStrategy&&) = default;
     virtual ~ZonotopStrategy() = default;
+    ZonotopStrategy& operator=(ZonotopStrategy&&) = default;
     static ZonotopStrategy parse(std::istream&);
     int num_patterns() const;
     int max_pattern_length() const;
