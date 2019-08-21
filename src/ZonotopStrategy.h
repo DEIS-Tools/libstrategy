@@ -29,7 +29,7 @@
 #ifndef ZONOTOPSTRATEGY_H
 #define ZONOTOPSTRATEGY_H
 
-#include <ptrie_stable.h>
+#include <ptrie/ptrie_stable.h>
 #include <istream>
 #include <memory>
 
