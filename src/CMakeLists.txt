@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.7)
 project(z2s C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -6,6 +6,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 option(LIBSTRATEGY_OnlyLibrary "Build only as library." OFF)
 
 if(NOT LIBSTRATEGY_OnlyLibrary)
+	cmake_policy(SET CMP0069 NEW)
+	cmake_policy(SET CMP0074 NEW)
+
 	find_package(Boost 1.66 COMPONENTS program_options REQUIRED)
 	include_directories(${Boost_INCLUDE_DIR})
 endif()
