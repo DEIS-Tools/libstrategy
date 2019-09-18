@@ -3,4 +3,4 @@
 	url = https://github.com/nlohmann/json.git
 [submodule "third_party/ptrie"]
 	path = third_party/ptrie
-	url = git@github.com:petergjoel/ptrie.git
+	url = https://github.com/petergjoel/ptrie.git

@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
 cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0069 NEW)
+cmake_policy(SET CMP0074 NEW)
 
 set(CMAKE_CXX_STANDARD 17)
 if (NOT CMAKE_BUILD_TYPE)
@@ -18,5 +19,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/ptrie)
+# Unset Boost_ROOT here if set, not needed for JSON or source of strategy
+if(Boost_ROOT)
+	unset(Boost_ROOT)
+endif()
 add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/json)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/)
