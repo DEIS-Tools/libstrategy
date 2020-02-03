@@ -15,16 +15,16 @@ endif()
 
 add_library(strategy SHARED ${HEADER_FILES} libz2s.cpp ZonotopStrategy.cpp SimpleTree.cpp)
 target_include_directories (strategy PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(strategy PRIVATE nlohmann_json::nlohmann_json ptrie)
+target_link_libraries(strategy PRIVATE ptrie)
 
 add_library(strategyStatic STATIC ${HEADER_FILES} libz2s.cpp ZonotopStrategy.cpp SimpleTree.cpp)
 target_include_directories (strategyStatic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(strategyStatic PRIVATE nlohmann_json::nlohmann_json ptrie)
+target_link_libraries(strategyStatic PRIVATE ptrie)
 set_target_properties(strategyStatic PROPERTIES OUTPUT_NAME strategy)
 
 if(NOT LIBSTRATEGY_OnlyLibrary)
 	add_executable(z2s ${HEADER_FILES} main.cpp ZonotopStrategy.cpp SimpleTree.cpp)
-	target_link_libraries(z2s PRIVATE stdc++fs nlohmann_json::nlohmann_json ptrie ${Boost_LIBRARIES})
+	target_link_libraries(z2s PRIVATE stdc++fs ptrie ${Boost_LIBRARIES})
 endif()
 
 
