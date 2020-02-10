@@ -19,20 +19,24 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
 
-ExternalProject_add(ptrie-ext
-		GIT_REPOSITORY https://github.com/petergjoel/ptrie
-		GIT_TAG 1.0.3
-		CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DPTRIE_BuildTests=OFF
-)
+option(STRATEGY_GetDependencies "Fetch external dependencies from web." ON)
 
-ExternalProject_add(json-ext
-		GIT_REPOSITORY https://github.com/nlohmann/json
-		GIT_TAG v3.7.0
-		CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DJSON_BuildTests=OFF
-)
+if (STRATEGY_GetDependencies)
+    ExternalProject_add(ptrie-ext
+        URL https://github.com/petergjoel/ptrie/archive/v1.1.0.zip
+        URL_HASH SHA512=092a8f50ca21d1199b19a10c4e0273c93a717a9f6491998a16bf21d21d37e6537ffd8a06ac41a2b623241da6036546d44b754567441944565e2a16646378cf29
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
+    )
 
-include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
-link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+    ExternalProject_add(json-ext
+        URL https://github.com/nlohmann/json/archive/v3.7.3.zip
+        URL_HASH SHA512=b47a07de9a071cce645a173d084df5dd31f7669154fc00f6c99e0506474d30e8376acaee1d3c79a50def4f25a36042951bfa4fca9a704687e59c368d05053158
+	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DJSON_BuildTests=OFF
+    )
+
+    include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+    link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+endif (STRATEGY_GetDependencies)
 
 # Unset Boost_ROOT here if set, not needed for JSON or source of strategy
 if(Boost_ROOT)

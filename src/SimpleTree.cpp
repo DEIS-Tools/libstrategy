@@ -145,7 +145,7 @@ SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumptio
     if(subsumption) tree._root->subsumption_reduction(minim, tree);
     if(simplify)
     {
-        ptrie::map<std::shared_ptr<node_t>> nodemap;
+        nodemap_t nodemap;
         if(tree._root)
             tree._root = tree._root->simplify(true, nodemap, tree);
         if(tree._root)
@@ -872,7 +872,7 @@ double SimpleTree::node_t::value(const double* disc, const double* cont, uint32_
 
 
 
-std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap, SimpleTree& parent) {
+std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, nodemap_t& nodemap, SimpleTree& parent) {
     if(_low) _low = _low->simplify(make_dd, nodemap, parent);
     if(_high) _high = _high->simplify(make_dd, nodemap, parent);
     if(_low)
@@ -958,40 +958,31 @@ std::shared_ptr<SimpleTree::node_t> SimpleTree::node_t::simplify(bool make_dd, p
     }
     if(make_dd)
     {
-        auto sig = signature();
-        auto r = nodemap.insert(sig.first.get(), sig.second);
-        auto& ptr = nodemap.get_data(r.second);               
+        auto& ptr = nodemap[*this]; 
         if(ptr == nullptr)
-            ptr = nodemap.get_data(r.second) = shared_from_this();
+            ptr = shared_from_this();
         return ptr;
     }
     return shared_from_this();
 }
 
-std::pair<std::unique_ptr<unsigned char[]>, size_t> SimpleTree::node_t::signature() const {
-    std::pair<std::unique_ptr<unsigned char[]>, size_t> res;
-    res.second = sizeof(uint32_t)*1+sizeof(double)+sizeof(size_t)*2;
-    res.first = std::make_unique<unsigned char[]>(res.second);
-    memset(res.first.get(), 0, res.second);
-    unsigned char* next = res.first.get();    
-    if(is_leaf())
+SimpleTree::signature_t::signature_t(const SimpleTree::node_t& node)
+{
+    if(node.is_leaf())
     {
-        ((double*)next)[0] = _cost;
-        res.second = sizeof(double);
+        _limit = node._limit;
+        _low = node._low.get();
+        _high = node._high.get();
+        _var = node._var;
     }
     else
     {
-        ((uint32_t*)next)[0] = _var;
-        next += sizeof(uint32_t);
-        ((double*)next)[0] = _limit;
-        next += sizeof(double);
-        ((size_t*)next)[0] = (size_t)_low.get();
-        ((size_t*)next)[1] = (size_t)_high.get();        
+        _var = 0;
+        _low = nullptr;
+        _high = nullptr;
+        _limit = node._cost;
     }
-    return res;
 }
-
-
 
 bool SimpleTree::node_t::is_leaf() const {
     return _low == nullptr && _high == nullptr;
