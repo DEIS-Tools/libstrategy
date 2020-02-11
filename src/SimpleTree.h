@@ -58,7 +58,7 @@ private:
         node_t* _high;
         signature_t(const SimpleTree::node_t&);
     } __attribute__((packed));
-    friend class ptrie::byte_iterator<signature_t>;
+    friend struct ptrie::byte_iterator<signature_t>;
 
     using nodemap_t = ptrie::map<signature_t,std::shared_ptr<node_t>>;
     SimpleTree() = default;
