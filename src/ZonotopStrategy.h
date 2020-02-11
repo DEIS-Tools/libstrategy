@@ -34,7 +34,6 @@
 
 class ZonotopStrategy {
 public:
-    ZonotopStrategy(const ZonotopStrategy& orig) = default;
     ZonotopStrategy(ZonotopStrategy&&) = default;
     virtual ~ZonotopStrategy() = default;
     ZonotopStrategy& operator=(ZonotopStrategy&&) = default;
