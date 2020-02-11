@@ -44,11 +44,23 @@ public:
     std::ostream& print_c(std::ostream& stream, std::string name) const;
     double value(const double* disc, const double* cont, uint32_t action) const;
     bool is_minimization() const { return _is_minimization; }
-    const std::vector<std::string> &actions() const { return _actions; }
+    const std::vector<std::string> &actions() const;
     const std::vector<std::string> &discrete_features() const { return _statevars; }
     const std::vector<std::string> &continous_features() const { return _pointvars; }
 private:
+    
     using json = nlohmann::json;
+    struct node_t;
+    struct signature_t {
+        uint32_t _var;
+        double _limit;
+        node_t* _low;
+        node_t* _high;
+        signature_t(const SimpleTree::node_t&);
+    } __attribute__((packed));
+    friend class ptrie::byte_iterator<signature_t>;
+
+    using nodemap_t = ptrie::map<signature_t,std::shared_ptr<node_t>>;
     SimpleTree() = default;
     
     static std::vector<double> parse_key(const std::string& key);
@@ -64,7 +76,7 @@ private:
         void insert(std::vector<double>& key, json& tree, size_t action, SimpleTree& parent, size_t prefix, bool minimize, double accuracy, std::vector<double>& exactness);
         std::ostream& print(std::ostream& out, size_t tabs = 0) const;
         bool is_leaf() const;
-        std::shared_ptr<node_t> simplify(bool make_dd, ptrie::map<std::shared_ptr<node_t>>& nodemap, SimpleTree& parent);
+        std::shared_ptr<node_t> simplify(bool make_dd, nodemap_t& nodemap, SimpleTree& parent);
         void subsumption_reduction(bool minimization, SimpleTree& parent);
         void action_nodes(std::vector<std::shared_ptr<node_t>>& nodes, uint32_t low, uint32_t high, uint32_t varid);
         std::pair<double,double> compute_min_max();
@@ -101,7 +113,6 @@ private:
                 return _low < other._low;
             return _high < other._high;
         }
-        std::pair<std::unique_ptr<unsigned char[]>, size_t> signature() const;
     };
         
     std::vector<std::string> _actions;
@@ -109,8 +120,33 @@ private:
     std::vector<std::string> _pointvars;
     std::shared_ptr<node_t> _root;
     bool _is_minimization = true;
-    
 };
 
+namespace ptrie{
+    template<>
+    struct byte_iterator<SimpleTree::signature_t> {
+        static uchar& access(SimpleTree::signature_t* data, size_t id)
+        {
+            return ((uchar*)data)[id];
+        }
+        
+        static const uchar& const_access(const SimpleTree::signature_t* data, size_t id)
+        {
+            return ((const uchar*)data)[id];
+        }
+        
+        static constexpr size_t element_size()
+        {
+            return sizeof(size_t)*2+sizeof(double)+sizeof(uint32_t);
+        }
+        
+        static constexpr bool continious()
+        {
+            return true;
+        }
+        
+        // add read_blob, write_blob
+    };
+}
 #endif /* SIMPLETREE_H */
 
