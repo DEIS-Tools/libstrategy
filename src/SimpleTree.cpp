@@ -33,11 +33,18 @@
 #include <unordered_set>
 
 using json = nlohmann::json;
+
+const std::vector<std::string>& SimpleTree::actions() const
+{
+    return _actions;
+}
+
 SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumption, double accuracy) 
 {
     std::vector<double> empty;
     return parse(input, simplify, subsumption, accuracy, empty);
 }
+
 SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumption, double accuracy, std::vector<double>& exactness) 
 {
     auto raw = json::parse(input);
