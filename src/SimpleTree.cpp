@@ -1115,7 +1115,7 @@ bool SimpleTree::node_t::is_leaf() const {
 
 std::ostream& SimpleTree::print(std::ostream& stream) const
 {
-    //_root->print(stream, 0);
+    _root->print(stream, 0);
     return stream;
 }
 
