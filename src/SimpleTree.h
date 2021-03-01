@@ -38,7 +38,7 @@ class SimpleTree {
 public:
     SimpleTree(const SimpleTree& orig) = default;
     virtual ~SimpleTree() = default;
-    static SimpleTree parse(std::istream&, bool simplify = true, bool subsumption = true, double accuracy = 0);
+    static SimpleTree parse(std::istream&, bool simplify = false, bool subsumption = false, double accuracy = 0);
     static SimpleTree parse(std::istream&, bool simplify, bool subsumption, double accuracy, std::vector<double>& exactness);
     std::ostream& print(std::ostream& stream) const;
     std::ostream& print_c(std::ostream& stream, std::string name) const;
@@ -112,6 +112,9 @@ private:
             if(_low != other._low)
                 return _low < other._low;
             return _high < other._high;
+        }
+        std::shared_ptr<node_t>& operator[](bool b) {
+            return b ? _high : _low;
         }
     };
         

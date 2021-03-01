@@ -71,10 +71,11 @@ SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumptio
         tree._root->_cost = std::numeric_limits<double>::infinity();
         tree._root->_var = std::numeric_limits<uint32_t>::max();
     }    
-    tree._actions.resize(raw["actions"].size());
     for(auto it = raw["actions"].begin(); it != raw["actions"].end(); ++it)
     {
         auto id = atoi(it.key().c_str());
+        if(id >= (int)tree._actions.size())
+            tree._actions.resize(id+1);
         tree._actions[id] = it.value().get<std::string>();
     }
     
@@ -149,14 +150,14 @@ SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumptio
     }
     tree._is_minimization = minim != 0;
     if(subsumption) tree._root->subsumption_reduction(minim, tree);
-    if(simplify)
+    /*if(simplify) // disabled for now
     {
         nodemap_t nodemap;
         if(tree._root)
             tree._root = tree._root->simplify(true, nodemap, tree);
         if(tree._root)
             tree._root->_parent = nullptr;
-    }
+    }*/
     return tree;
 }
 
@@ -814,10 +815,32 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
             }
             else
             {
-                if(_limit > key[prefix])
-                    _low->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
-                else
-                    _high->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
+                const auto b = _limit < key[prefix];
+                auto branch = (*this)[b];
+                if(branch->_var != prefix)
+                {
+                    // we need to inject a node here
+                    auto next = std::make_shared<node_t>();
+                    (*next)[b] = std::make_shared<node_t>();
+                    if(minimize) next->_cost *= -1.0;
+                    if(minimize) (*next)[b]->_cost *= -1.0;
+                    next->_parent = this;
+                    next->_var = prefix;
+                    next->_limit = key[prefix];
+                    // example
+                    // original [0,10] | [11,20] made for element 10, 
+                    // we inject element 7, so we now get
+                    // ([0-7] | [8-10] ) | [11,20
+                    // where the original low is moved to the high
+                    // of the newly created node
+                    (*next)[!b] = branch;
+                    (*this)[b] = next;
+                    assert((*this)[b] == next);
+                    (*next)[true]->_parent = next.get();
+                    (*next)[false]->_parent = next.get();
+                    next->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
+                }
+                else branch->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
             }
         }
         consistent(key.size() + 1);
@@ -1115,7 +1138,7 @@ bool SimpleTree::node_t::is_leaf() const {
 
 std::ostream& SimpleTree::print(std::ostream& stream) const
 {
-    //_root->print(stream, 0);
+    _root->print(stream, 0);
     return stream;
 }
 

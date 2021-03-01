@@ -44,3 +44,9 @@ if(Boost_ROOT)
 endif()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/)
+
+set(LIBSTRATEGY_BuildTests "Build tests of libstrategy" ON)
+if(BUILD_TESTING AND LIBSTRATEGY_BuildTests)
+    enable_testing()
+    add_subdirectory(test)
+endif()
