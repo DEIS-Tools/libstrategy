@@ -811,7 +811,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
         {
             if(_limit == key[prefix])
             {
-                _low->insert(key, tree, action, parent, prefix + 1, minimize, accuracy, exactness);
+                _low->insert(key, tree, action, parent, prefix + (_low->_var != _var ? 1 : 0), minimize, accuracy, exactness);
             }
             else
             {
