@@ -806,8 +806,8 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                 {
                     // we need to inject a node here
                     auto next = std::make_shared<node_t>();
-                    (*next)[b] = std::make_shared<node_t>();
-                    (*next)[b]->_cost = next->_cost = (minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
+                    (*next)[false] = std::make_shared<node_t>();
+                    (*next)[false]->_cost = next->_cost = (minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
                     next->_parent = this;
                     next->_var = prefix;
                     next->_limit = key[prefix];
@@ -817,9 +817,8 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                     // ([0-7] | [8-10] ) | [11,20
                     // where the original low is moved to the high
                     // of the newly created node
-                    (*next)[!b] = branch;
+                    (*next)[true] = branch;
                     (*this)[b] = next;
-                    assert((*this)[b] == next);
                     (*next)[true]->_parent = next.get();
                     (*next)[false]->_parent = next.get();
                     next->insert(key, tree, action, parent, prefix, minimize, accuracy, exactness);
