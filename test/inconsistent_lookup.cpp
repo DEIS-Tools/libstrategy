@@ -33,8 +33,10 @@ BOOST_AUTO_TEST_CASE(Inconsistent1)
     strategy += "/inconsistent1.strategy";
     std::ifstream in(strategy);
     auto tree = SimpleTree::parse(in, false, false);
-    double vars[] = {9,1,7,1,10,1,0,0,1,1,1,1,0,1,1,1,0,1,0,0,0};
-    BOOST_REQUIRE_LT(tree.value(vars,nullptr, 18), tree.value(vars,nullptr, 19));
+    double vars[] = {10,1,0,0,1,1,1,1,0,1,1,1,0,1,0,0,0};
+    auto act18 = tree.value(vars,nullptr, 0);
+    auto act19 = tree.value(vars,nullptr, 1);
+    BOOST_REQUIRE_LT(act18, act19);
 }
 
 BOOST_AUTO_TEST_CASE(Inconsistent1Simplify)
@@ -45,6 +47,7 @@ BOOST_AUTO_TEST_CASE(Inconsistent1Simplify)
     auto tree = SimpleTree::parse(in, true, false);
     double vars[] = {9,1,7,1,10,1,0,0,1,1,1,1,0,1,1,1,0,1,0,0,0};
     BOOST_REQUIRE_LT(tree.value(vars,nullptr, 18), tree.value(vars,nullptr, 19));
+    BOOST_REQUIRE_LT(tree.value(vars,nullptr, 39), tree.value(vars,nullptr, 19));
 }
 
 BOOST_AUTO_TEST_CASE(Inconsistent1SimplifySubsumption)
@@ -55,4 +58,5 @@ BOOST_AUTO_TEST_CASE(Inconsistent1SimplifySubsumption)
     auto tree = SimpleTree::parse(in, true, true);
     double vars[] = {9,1,7,1,10,1,0,0,1,1,1,1,0,1,1,1,0,1,0,0,0};
     BOOST_REQUIRE_LT(tree.value(vars,nullptr, 18), tree.value(vars,nullptr, 19));
+    BOOST_REQUIRE_LT(tree.value(vars,nullptr, 39), tree.value(vars,nullptr, 19));
 }

@@ -1,66 +1,8 @@
 {"version":1.0,"type":"state->regressor","representation":"map","actions":{
 		"0":"movement0.P0->movement0.F0T1 { isReady(id, 0, 1), tau, t := 0, position[id] := -1, punish(id, 0, 1) }",
-		"1":"movement0.P0->movement0.F0T2 { isReady(id, 0, 2), tau, t := 0, position[id] := -1, punish(id, 0, 2) }",
-		"2":"movement0.P0->movement0.F0T3 { isReady(id, 0, 3), tau, t := 0, position[id] := -1, punish(id, 0, 3) }",
-		"3":"movement0.P1->movement0.F1T2 { isReady(id, 1, 2), tau, t := 0, position[id] := -1, punish(id, 1, 2) }",
-		"4":"movement0.P1->movement0.F1T3 { isReady(id, 1, 3), tau, t := 0, position[id] := -1, punish(id, 1, 3) }",
-		"5":"movement0.P2->movement0.F2T1 { isReady(id, 2, 1), tau, t := 0, position[id] := -1, punish(id, 2, 1) }",
-		"6":"movement0.P2->movement0.F2T3 { isReady(id, 2, 3), tau, t := 0, position[id] := -1, punish(id, 2, 3) }",
-		"7":"movement0.P3->movement0.F3T1 { isReady(id, 3, 1), tau, t := 0, position[id] := -1, punish(id, 3, 1) }",
-		"8":"movement0.P3->movement0.F3T2 { isReady(id, 3, 2), tau, t := 0, position[id] := -1, punish(id, 3, 2) }",
-		"9":"taskExe0.T0->taskExe0.Waiting { shouldWait(id), tau, t := 0, idle[id] := false }",
-		"10":"taskExe0.T0->taskExe0.T1 { !isBusy(1) && position[id] == 1 && isNecessary(id, 1), tau, t := 0, ts[id][1] := true, tf[id][1] := false, idle[id] := false, reward(id) }",
-		"11":"taskExe0.T0->taskExe0.T2 { tf[id][1] && !isBusy(2) && position[id] == 2 && isNecessary(id, 2), tau, t := 0, ts[id][2] := true, tf[id][2] := false, idle[id] := false, reward(id) }",
-		"12":"taskExe0.T0->taskExe0.T3 { tf[id][2] && !isBusy(3) && position[id] == 3 && isNecessary(id, 3), tau, t := 0, ts[id][3] := true, tf[id][3] := false, idle[id] := false, reward(id) }",
-		"13":"movement1.P0->movement1.F0T1 { isReady(id, 0, 1), tau, t := 0, position[id] := -1, punish(id, 0, 1) }",
-		"14":"movement1.P0->movement1.F0T2 { isReady(id, 0, 2), tau, t := 0, position[id] := -1, punish(id, 0, 2) }",
-		"15":"movement1.P0->movement1.F0T3 { isReady(id, 0, 3), tau, t := 0, position[id] := -1, punish(id, 0, 3) }",
-		"16":"movement1.P1->movement1.F1T2 { isReady(id, 1, 2), tau, t := 0, position[id] := -1, punish(id, 1, 2) }",
-		"17":"movement1.P1->movement1.F1T3 { isReady(id, 1, 3), tau, t := 0, position[id] := -1, punish(id, 1, 3) }",
-		"18":"movement1.P2->movement1.F2T1 { isReady(id, 2, 1), tau, t := 0, position[id] := -1, punish(id, 2, 1) }",
-		"19":"movement1.P2->movement1.F2T3 { isReady(id, 2, 3), tau, t := 0, position[id] := -1, punish(id, 2, 3) }",
-		"20":"movement1.P3->movement1.F3T1 { isReady(id, 3, 1), tau, t := 0, position[id] := -1, punish(id, 3, 1) }",
-		"21":"movement1.P3->movement1.F3T2 { isReady(id, 3, 2), tau, t := 0, position[id] := -1, punish(id, 3, 2) }",
-		"22":"taskExe1.T0->taskExe1.Waiting { shouldWait(id), tau, t := 0, idle[id] := false }",
-		"23":"taskExe1.T0->taskExe1.T1 { !isBusy(1) && position[id] == 1 && isNecessary(id, 1), tau, t := 0, ts[id][1] := true, tf[id][1] := false, idle[id] := false, reward(id) }",
-		"24":"taskExe1.T0->taskExe1.T2 { tf[id][1] && !isBusy(2) && position[id] == 2 && isNecessary(id, 2), tau, t := 0, ts[id][2] := true, tf[id][2] := false, idle[id] := false, reward(id) }",
-		"25":"taskExe1.T0->taskExe1.T3 { tf[id][2] && !isBusy(3) && position[id] == 3 && isNecessary(id, 3), tau, t := 0, ts[id][3] := true, tf[id][3] := false, idle[id] := false, reward(id) }",
-		"26":"movement2.P0->movement2.F0T1 { isReady(id, 0, 1), tau, t := 0, position[id] := -1, punish(id, 0, 1) }",
-		"27":"movement2.P0->movement2.F0T2 { isReady(id, 0, 2), tau, t := 0, position[id] := -1, punish(id, 0, 2) }",
-		"28":"movement2.P0->movement2.F0T3 { isReady(id, 0, 3), tau, t := 0, position[id] := -1, punish(id, 0, 3) }",
-		"29":"movement2.P1->movement2.F1T2 { isReady(id, 1, 2), tau, t := 0, position[id] := -1, punish(id, 1, 2) }",
-		"30":"movement2.P1->movement2.F1T3 { isReady(id, 1, 3), tau, t := 0, position[id] := -1, punish(id, 1, 3) }",
-		"31":"movement2.P2->movement2.F2T1 { isReady(id, 2, 1), tau, t := 0, position[id] := -1, punish(id, 2, 1) }",
-		"32":"movement2.P2->movement2.F2T3 { isReady(id, 2, 3), tau, t := 0, position[id] := -1, punish(id, 2, 3) }",
-		"33":"movement2.P3->movement2.F3T1 { isReady(id, 3, 1), tau, t := 0, position[id] := -1, punish(id, 3, 1) }",
-		"34":"movement2.P3->movement2.F3T2 { isReady(id, 3, 2), tau, t := 0, position[id] := -1, punish(id, 3, 2) }",
-		"35":"taskExe2.T0->taskExe2.Waiting { shouldWait(id), tau, t := 0, idle[id] := false }",
-		"36":"taskExe2.T0->taskExe2.T1 { !isBusy(1) && position[id] == 1 && isNecessary(id, 1), tau, t := 0, ts[id][1] := true, tf[id][1] := false, idle[id] := false, reward(id) }",
-		"37":"taskExe2.T0->taskExe2.T2 { tf[id][1] && !isBusy(2) && position[id] == 2 && isNecessary(id, 2), tau, t := 0, ts[id][2] := true, tf[id][2] := false, idle[id] := false, reward(id) }",
-		"38":"taskExe2.T0->taskExe2.T3 { tf[id][2] && !isBusy(3) && position[id] == 3 && isNecessary(id, 3), tau, t := 0, ts[id][3] := true, tf[id][3] := false, idle[id] := false, reward(id) }",
-		"39":"WAIT"
+		"1":"movement0.P0->movement0.F0T2 { isReady(id, 0, 2), tau, t := 0, position[id] := -1, punish(id, 0, 2) }"
 	},"statevars":[
-		"movement0.location",
-		"taskExe0.location",
-		"movement1.location",
-		"taskExe1.location",
-		"movement2.location",
-		"taskExe2.location",
-		"iteration[0]",
-		"iteration[1]",
-		"iteration[2]",
-		"tf[0][0]",
-		"tf[0][1]",
-		"tf[0][2]",
-		"tf[0][3]",
-		"tf[1][0]",
-		"tf[1][1]",
-		"tf[1][2]",
-		"tf[1][3]",
-		"tf[2][0]",
-		"tf[2][1]",
-		"tf[2][2]",
-		"tf[2][3]"
+		"taskExe1.location"
 	],"pointvars":[
 	],"locationnames":{
 		"movement0.location":{
@@ -130,23 +72,23 @@
 			"4":"T3"
 		}
 	},"regressors":{
-		"(9,1,7,1,4,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0)":
+		"(4)":
 			{"type":"act->point->val","representation":"simpletree","minimize":0,"regressor":
 				{
-				"18" : -58.52619021830245
+				"0" : -58.52619021830245
 				}
 			},
-		"(9,1,7,1,2,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0)":
+		"(2)":
 			{"type":"act->point->val","representation":"simpletree","minimize":0,"regressor":
 				{
-				"19" : -104.5393376817416
+				"1" : -104.5393376817416
 				}
 			},
-		"(9,1,7,1,10,1,0,0,1,1,1,1,0,1,1,1,0,1,0,0,0)":
+		"(10)":
 			{"type":"act->point->val","representation":"simpletree","minimize":0,"regressor":
 				{
-				"18" : -39.75,
-				"19" : -26.30381528710121
+				"0" : -39.75,
+				"1" : -26.30381528710121
 				}
 			}
 	}
