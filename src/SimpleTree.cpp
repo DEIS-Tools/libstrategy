@@ -124,7 +124,7 @@ SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumptio
         if(minim != is_minimize)
             throw base_error("Expected all sub-regressors to have same minimization flag");
         if(first_element)
-            if(!is_minimize) tree._root->_cost *= -1;
+            tree._root->_cost = (is_minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
         first_element = false;
         // make sure all actions are mapped initially
         for(size_t i = 0; i < tree._actions.size(); ++i)
@@ -140,7 +140,7 @@ SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumptio
                 tree._root = std::make_shared<node_t>();
                 tree._root->_limit = -std::numeric_limits<double>::infinity();
                 tree._root->_cost = std::numeric_limits<double>::infinity();
-                if(!is_minimize) tree._root->_cost *= -1;
+                tree._root->_cost = (is_minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
                 tree._root->_var = std::numeric_limits<uint32_t>::max();
             }
             
@@ -613,11 +613,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
             assert(_var == std::numeric_limits<uint32_t>::max());
             _low = std::make_shared<node_t>();
             _high = std::make_shared<node_t>();
-            if(!minimize)
-            {
-                _low->_cost *= -1;
-                _high->_cost *= -1;
-            }
+            _low->_cost = _high->_cost = (minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
             if(!std::isinf(_cost))
             {
                 std::swap(_low->_cost, _cost);
@@ -721,10 +717,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                 {
                     auto tmp = std::make_shared<node_t>();
                     tmp->_low = std::make_shared<node_t>();
-                    if(!minimize) 
-                    {
-                        tmp->_low->_cost *= -1;
-                    }
+                    tmp->_cost = tmp->_low->_cost = (minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
                     tmp->_high = shared_from_this();
                     tmp->_limit = action;
                     tmp->_var = prefix;
@@ -754,11 +747,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                     assert(std::isinf(_high->_cost));
                     _high->_low = std::make_shared<node_t>();
                     _high->_high = std::make_shared<node_t>();
-                    if(!minimize) 
-                    {
-                        _high->_low->_cost *= -1;
-                        _high->_high->_cost *= -1;
-                    }
+                    _high->_low->_cost = _high->_high->_cost = (minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
                     _high->_limit = action;
                     _high->_var = prefix;
                     _high->_low->_parent = _high.get();
@@ -772,11 +761,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                 {
                     auto tmp = std::make_shared<node_t>();
                     tmp->_low = std::make_shared<node_t>();
-                    if(!minimize) 
-                    {
-                        tmp->_low->_cost *= -1;
-                        tmp->_high->_cost *= -1;
-                    }
+                    tmp->_low->_cost = tmp->_cost = (minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
                     tmp->_parent = this;
                     tmp->_high = _high;
                     _high = tmp;
@@ -822,8 +807,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
                     // we need to inject a node here
                     auto next = std::make_shared<node_t>();
                     (*next)[b] = std::make_shared<node_t>();
-                    if(minimize) next->_cost *= -1.0;
-                    if(minimize) (*next)[b]->_cost *= -1.0;
+                    (*next)[b]->_cost = next->_cost = (minimize ? 1 : -1) * std::numeric_limits<double>::infinity();
                     next->_parent = this;
                     next->_var = prefix;
                     next->_limit = key[prefix];
