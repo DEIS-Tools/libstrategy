@@ -4,25 +4,33 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 option(LIBSTRATEGY_OnlyLibrary "Build only as library." OFF)
 
-add_library(strategy SHARED ${HEADER_FILES} ZonotopStrategy.cpp SimpleTree.cpp)
-add_dependencies(strategy ptrie-ext json-ext)
-target_include_directories (strategy PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-add_library(strategyStatic STATIC ${HEADER_FILES} ZonotopStrategy.cpp SimpleTree.cpp)
-add_dependencies(strategyStatic ptrie-ext json-ext)
-target_include_directories (strategyStatic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-set_target_properties(strategyStatic PROPERTIES OUTPUT_NAME strategy)
-
 if(NOT LIBSTRATEGY_OnlyLibrary)
 	cmake_policy(SET CMP0069 NEW)
 	cmake_policy(SET CMP0074 NEW)
 
 	find_package(Boost 1.66 COMPONENTS program_options REQUIRED)
-
 	include_directories(${Boost_INCLUDE_DIR})
-	add_executable(z2s ${HEADER_FILES} main.cpp)
-        add_dependencies(z2s ptrie-ext json-ext)
-	target_link_libraries(z2s PRIVATE strategyStatic stdc++fs ${Boost_LIBRARIES})
+endif()
+
+add_library(strategy SHARED ${HEADER_FILES} libz2s.cpp ZonotopStrategy.cpp SimpleTree.cpp)
+if (STRATEGY_GetDependencies)
+	add_dependencies(strategy ptrie json)
+endif (STRATEGY_GetDependencies)
+target_include_directories (strategy PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_library(strategyStatic STATIC ${HEADER_FILES} libz2s.cpp ZonotopStrategy.cpp SimpleTree.cpp)
+if (STRATEGY_GetDependencies)
+	add_dependencies(strategyStatic ptrie json)
+endif (STRATEGY_GetDependencies)
+target_include_directories (strategyStatic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(strategyStatic PROPERTIES OUTPUT_NAME strategy)
+
+if(NOT LIBSTRATEGY_OnlyLibrary)
+	add_executable(z2s ${HEADER_FILES} main.cpp ZonotopStrategy.cpp SimpleTree.cpp)
+	if (STRATEGY_GetDependencies)
+		add_dependencies(z2s ptrie json)
+	endif (STRATEGY_GetDependencies)
+	target_link_libraries(z2s PRIVATE stdc++fs ${Boost_LIBRARIES})
 endif()
 
 
