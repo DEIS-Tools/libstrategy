@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
-project(z2s C CXX)
+project(libstrategy C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 option(LIBSTRATEGY_OnlyLibrary "Build only as library." OFF)
@@ -38,6 +38,6 @@ install(TARGETS strategy
 	RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
-install (FILES  errors.h  libz2s.h SimpleTree.h ZonotopStrategy.h DESTINATION include/libstrategy)
+install (FILES  errors.h  SimpleTree.h ZonotopStrategy.h DESTINATION include/libstrategy)
 
 

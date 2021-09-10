@@ -38,7 +38,7 @@ class SimpleTree {
 public:
     SimpleTree(const SimpleTree& orig) = default;
     virtual ~SimpleTree() = default;
-    static SimpleTree parse(std::istream&, bool simplify = true, bool subsumption = true, double accuracy = 0);
+    static SimpleTree parse(std::istream&, bool simplify = false, bool subsumption = false, double accuracy = 0);
     static SimpleTree parse(std::istream&, bool simplify, bool subsumption, double accuracy, std::vector<double>& exactness);
     std::ostream& print(std::ostream& stream) const;
     std::ostream& print_c(std::ostream& stream, std::string name) const;
@@ -81,7 +81,7 @@ private:
         void action_nodes(std::vector<std::shared_ptr<node_t>>& nodes, uint32_t low, uint32_t high, uint32_t varid);
         std::pair<double,double> compute_min_max();
         bool check_tiles(node_t* start, std::vector<std::shared_ptr<node_t>>& , std::vector<std::pair<double,double>>& bounds, double val, double minval, double maxval, bool minimization, size_t offset);
-        bool subsumes(std::vector<std::pair<double,double>>& bounds, std::vector<std::pair<double,double>>& obounds, double val, bool minimization, size_t offset, double& best, std::pair<double,double>& closest);
+        bool subsumes(const std::vector<std::pair<double,double>>& bounds, std::vector<std::pair<double,double>>& obounds, const double val, const bool minimization, size_t offset, double& best, std::pair<double,double>& closest);
         void get_ranks(std::set<std::pair<double, node_t*>>& values, node_t* start);
         void set_ranks(std::unordered_map<double,double>& values);
         std::ostream& print_c(std::ostream& stream, size_t disc, std::unordered_set<const node_t*>& printed, size_t tabs = 0) const;
@@ -112,6 +112,9 @@ private:
             if(_low != other._low)
                 return _low < other._low;
             return _high < other._high;
+        }
+        std::shared_ptr<node_t>& operator[](bool b) {
+            return b ? _high : _low;
         }
     };
         

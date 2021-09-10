@@ -1,0 +1,95 @@
+{"version":1.0,"type":"state->regressor","representation":"map","actions":{
+		"0":"movement0.P0->movement0.F0T1 { isReady(id, 0, 1), tau, t := 0, position[id] := -1, punish(id, 0, 1) }",
+		"1":"movement0.P0->movement0.F0T2 { isReady(id, 0, 2), tau, t := 0, position[id] := -1, punish(id, 0, 2) }"
+	},"statevars":[
+		"taskExe1.location"
+	],"pointvars":[
+	],"locationnames":{
+		"movement0.location":{
+			"0":"P0",
+			"1":"F0T1",
+			"2":"F0T2",
+			"3":"F0T3",
+			"4":"P1",
+			"5":"F1T2",
+			"6":"F1T3",
+			"7":"P2",
+			"8":"F2T1",
+			"9":"F2T3",
+			"10":"P3",
+			"11":"F3T1",
+			"12":"F3T2"
+		},
+		"taskExe0.location":{
+			"0":"Waiting",
+			"1":"T0",
+			"2":"T1",
+			"3":"T2",
+			"4":"T3"
+		},
+		"movement1.location":{
+			"0":"P0",
+			"1":"F0T1",
+			"2":"F0T2",
+			"3":"F0T3",
+			"4":"P1",
+			"5":"F1T2",
+			"6":"F1T3",
+			"7":"P2",
+			"8":"F2T1",
+			"9":"F2T3",
+			"10":"P3",
+			"11":"F3T1",
+			"12":"F3T2"
+		},
+		"taskExe1.location":{
+			"0":"Waiting",
+			"1":"T0",
+			"2":"T1",
+			"3":"T2",
+			"4":"T3"
+		},
+		"movement2.location":{
+			"0":"P0",
+			"1":"F0T1",
+			"2":"F0T2",
+			"3":"F0T3",
+			"4":"P1",
+			"5":"F1T2",
+			"6":"F1T3",
+			"7":"P2",
+			"8":"F2T1",
+			"9":"F2T3",
+			"10":"P3",
+			"11":"F3T1",
+			"12":"F3T2"
+		},
+		"taskExe2.location":{
+			"0":"Waiting",
+			"1":"T0",
+			"2":"T1",
+			"3":"T2",
+			"4":"T3"
+		}
+	},"regressors":{
+		"(4)":
+			{"type":"act->point->val","representation":"simpletree","minimize":0,"regressor":
+				{
+				"0" : -58.52619021830245
+				}
+			},
+		"(2)":
+			{"type":"act->point->val","representation":"simpletree","minimize":0,"regressor":
+				{
+				"1" : -104.5393376817416
+				}
+			},
+		"(10)":
+			{"type":"act->point->val","representation":"simpletree","minimize":0,"regressor":
+				{
+				"0" : -39.75,
+				"1" : -26.30381528710121
+				}
+			}
+	}
+}
