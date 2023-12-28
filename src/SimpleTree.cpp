@@ -51,7 +51,7 @@ SimpleTree SimpleTree::parse(std::istream& input, bool simplify, bool subsumptio
     if(!raw.is_object())
         throw base_error("Input JSON not well formatted");
 
-    if(!raw["version"].is_number_float() || raw["version"].get<double>() != 1.0)
+    if(!raw["version"].is_number() || raw["version"].get<double>() != 1.0)
         throw base_error("Input version not supported");
 
     if(!raw["type"].is_string() || raw["type"].get<std::string>() != "state->regressor")
