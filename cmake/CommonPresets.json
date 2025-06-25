@@ -1,0 +1,383 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "binaryDir": "${sourceDir}/build",
+      "displayName": "Configure with Defaults (Debug)"
+    },
+    {
+      "name": "multi",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build-multi",
+      "generator": "Ninja Multi-Config",
+      "displayName": "Configure for Ninja Debug/Release"
+    },
+    {
+      "name": "multi-san",
+      "inherits": "multi",
+      "binaryDir": "${sourceDir}/build-multi-san",
+      "environment": {
+        "CFLAGS": "-fsanitize=leak -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer",
+        "CXXFLAGS": "-fsanitize=leak -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer",
+        "LDFLAGS": "-fsanitize=leak -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer"
+      },
+      "displayName": "Configure for Ninja Debug/Release with Sanitizers"
+    },
+    {
+      "name": "gcc",
+      "inherits": "multi",
+      "binaryDir": "${sourceDir}/build-gcc",
+      "environment": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      },
+      "displayName": "Configure GCC for Ninja Debug/Release"
+    },
+    {
+      "name": "clang",
+      "inherits": "multi",
+      "binaryDir": "${sourceDir}/build-clang",
+      "environment": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      },
+      "displayName": "Configure Clang for Ninja Debug/Release"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "displayName": "Build using default configuration"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "multi",
+      "configuration": "Debug",
+      "displayName": "Build with Debug"
+    },
+    {
+      "name": "debug-san",
+      "inherits": "debug",
+      "configurePreset": "multi-san",
+      "displayName": "Build with Debug and Sanitizers"
+    },
+    {
+      "name": "debug-gcc",
+      "inherits": "debug",
+      "configurePreset": "gcc",
+      "displayName": "Build with GCC Debug"
+    },
+    {
+      "name": "debug-clang",
+      "inherits": "debug",
+      "configurePreset": "clang",
+      "displayName": "Build with Clang Debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "multi",
+      "configuration": "Release",
+      "displayName": "Build with Release"
+    },
+    {
+      "name": "release-san",
+      "inherits": "release",
+      "configurePreset": "multi-san",
+      "displayName": "Build with Release and Sanitizers"
+    },
+    {
+      "name": "release-gcc",
+      "inherits": "release",
+      "configurePreset": "gcc",
+      "displayName": "Build with GCC Release"
+    },
+    {
+      "name": "release-clang",
+      "inherits": "release",
+      "configurePreset": "clang",
+      "displayName": "Build with Clang Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": true },
+      "displayName": "Test with default options"
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "configurePreset": "multi",
+      "configuration": "Debug",
+      "displayName": "Test the Debug"
+    },
+    {
+      "name": "debug-san",
+      "inherits": "debug",
+      "configurePreset": "multi-san",
+      "displayName": "Test the Debug with Sanitizers"
+    },
+    {
+      "name": "debug-gcc",
+      "inherits": "debug",
+      "configurePreset": "gcc",
+      "displayName": "Test the GCC Debug"
+    },
+    {
+      "name": "debug-clang",
+      "inherits": "debug",
+      "configurePreset": "clang",
+      "displayName": "Test the Clang Debug"
+    },
+    {
+      "name": "release",
+      "inherits": "default",
+      "configurePreset": "multi",
+      "configuration": "Release",
+      "displayName": "Test the Release"
+    },
+    {
+      "name": "release-san",
+      "inherits": "release",
+      "configurePreset": "multi-san",
+      "displayName": "Test the Release with Sanitizers"
+    },
+    {
+      "name": "release-gcc",
+      "inherits": "release",
+      "configurePreset": "gcc",
+      "displayName": "Test the GCC Release"
+    },
+    {
+      "name": "release-clang",
+      "inherits": "release",
+      "configurePreset": "clang",
+      "displayName": "Test the Clang Release"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "default",
+      "displayName": "Configure, Build and Test with Defaults (Debug)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "default"
+        },
+        {
+          "type": "build",
+          "name": "default"
+        },
+        {
+          "type": "test",
+          "name": "default"
+        }
+      ]
+    },
+    {
+      "name": "debug",
+      "displayName": "Configure, Build and Test with Debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "multi"
+        },
+        {
+          "type": "build",
+          "name": "debug"
+        },
+        {
+          "type": "test",
+          "name": "debug"
+        }
+      ]
+    },
+    {
+      "name": "debug-san",
+      "displayName": "Configure, Build and Test with Debug and Sanitizers",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "multi-san"
+        },
+        {
+          "type": "build",
+          "name": "debug-san"
+        },
+        {
+          "type": "test",
+          "name": "debug-san"
+        }
+      ]
+    },
+    {
+      "name": "debug-gcc",
+      "displayName": "Configure, Build and Test with Debug using GCC",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc"
+        },
+        {
+          "type": "build",
+          "name": "debug-gcc"
+        },
+        {
+          "type": "test",
+          "name": "debug-gcc"
+        }
+      ]
+    },
+    {
+      "name": "debug-clang",
+      "displayName": "Configure, Build and Test with Debug using Clang",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang"
+        },
+        {
+          "type": "build",
+          "name": "debug-clang"
+        },
+        {
+          "type": "test",
+          "name": "debug-clang"
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "displayName": "Configure, Build and Test with Release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "multi"
+        },
+        {
+          "type": "build",
+          "name": "release"
+        },
+        {
+          "type": "test",
+          "name": "release"
+        }
+      ]
+    },
+    {
+      "name": "release-san",
+      "displayName": "Configure, Build and Test with Release and Sanitizers",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "multi-san"
+        },
+        {
+          "type": "build",
+          "name": "release-san"
+        },
+        {
+          "type": "test",
+          "name": "release-san"
+        }
+      ]
+    },
+    {
+      "name": "release-gcc",
+      "displayName": "Configure, Build and Test with Release using GCC",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc"
+        },
+        {
+          "type": "build",
+          "name": "release-gcc"
+        },
+        {
+          "type": "test",
+          "name": "release-gcc"
+        }
+      ]
+    },
+    {
+      "name": "release-clang",
+      "displayName": "Configure, Build and Test with Release using Clang",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang"
+        },
+        {
+          "type": "build",
+          "name": "release-clang"
+        },
+        {
+          "type": "test",
+          "name": "release-clang"
+        }
+      ]
+    },
+    {
+      "name": "multi",
+      "displayName": "Configure, Build and Test with Debug and Release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "multi"
+        },
+        {
+          "type": "build",
+          "name": "debug"
+        },
+        {
+          "type": "test",
+          "name": "debug"
+        },
+        {
+          "type": "build",
+          "name": "release"
+        },
+        {
+          "type": "test",
+          "name": "release"
+        }
+      ]
+    },
+    {
+      "name": "multi-san",
+      "displayName": "Configure, Build and Test with Debug and Release and Sanitizers",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "multi-san"
+        },
+        {
+          "type": "build",
+          "name": "debug-san"
+        },
+        {
+          "type": "test",
+          "name": "debug-san"
+        },
+        {
+          "type": "build",
+          "name": "release-san"
+        },
+        {
+          "type": "test",
+          "name": "release-san"
+        }
+      ]
+    }
+  ]
+}

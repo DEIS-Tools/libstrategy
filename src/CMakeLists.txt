@@ -10,7 +10,7 @@ if(NOT LIBSTRATEGY_OnlyLibrary)
     target_link_libraries(z2s PUBLIC ptrie::ptrie PRIVATE nlohmann_json::nlohmann_json Boost::program_options)
 endif()
 
-install(TARGETS strategy
+install(TARGETS strategy strategyStatic
 	RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
