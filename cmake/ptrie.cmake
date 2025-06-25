@@ -1,0 +1,26 @@
+find_package(ptrie 1.1.1 QUIET)
+if (ptrie_FOUND)
+   get_target_property(ptrie_INCLUDE_DIRS ptrie::ptrie INTERFACE_INCLUDE_DIRECTORIES)
+   message(STATUS "Found ptrie: ${ptrie_INCLUDE_DIRS}")
+else (ptrie_FOUND)
+   message(STATUS "Failed to find ptrie, going to fetch from source")
+   set(PTRIE_BuildTests OFF CACHE BOOL "Build the unit tests when BUILD_TESTING is enabled.")
+   set(PTRIE_BuildBenchmark OFF CACHE BOOL "Build the simple benchmark suite")
+   set(PTRIE_AddressSanitizer OFF CACHE BOOL "Enables address sanitization during compilation.")
+   set(PTRIE_GetDependencies OFF CACHE BOOL "Fetch external dependencies from web.")
+   set(FETCHCONTENT_QUIET ON)
+   set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+   include(FetchContent)
+   FetchContent_Declare(ptrie
+       GIT_REPOSITORY https://github.com/petergjoel/ptrie
+       GIT_TAG v1.1.1
+       GIT_SHALLOW TRUE  # download specific revision only (git clone --depth 1)
+       GIT_PROGRESS TRUE # show download progress in Ninja
+       FIND_PACKAGE_ARGS NAMES ptrie
+       USES_TERMINAL_DOWNLOAD TRUE)
+   FetchContent_MakeAvailable(ptrie)
+   message(STATUS "Got ptrie: ${ptrie_SOURCE_DIR}")
+   # Workaround until ptrie exports proper cmake config:
+   add_library(ptrie::ptrie INTERFACE IMPORTED GLOBAL)
+   target_include_directories(ptrie::ptrie INTERFACE ${ptrie_SOURCE_DIR}/src)
+endif (ptrie_FOUND)
