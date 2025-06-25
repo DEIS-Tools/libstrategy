@@ -4,7 +4,7 @@ Library for learning strategies.
 
 ## Dependencies
 
-Library only requires:
+Library-only build requires:
 - [ptrie](https://github.com/petergjoel/ptrie) (CMake will fetch automatically if not installed)
 - [nlohmann_json](https://github.com/nlohmann/json) (CMake will fetch automatically if not installed)
 
@@ -13,7 +13,7 @@ Full project requires:
 
 For Ubuntu 24.04 install build tools and library dependencies:
 ```shell
-sudo apt install cmake ninja-build g++ libboost-program-options-dev libboost-tests-dev
+sudo apt install cmake ninja-build g++ libboost-program-options-dev libboost-test-dev
 ```
 
 For macOS install build tools and library dependencies:
