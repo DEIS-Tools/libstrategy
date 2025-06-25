@@ -49,10 +49,10 @@ endif()
 if(NOT LIBSTRATEGY_OnlyLibrary)
 	cmake_policy(SET CMP0069 NEW)
 	cmake_policy(SET CMP0074 NEW)
-    cmake_policy(SET CMP0167 NEW) # do not rely on FindBoost/CMake, use FindBoost from boost installation
+    # cmake_policy(SET CMP0167 NEW) # do not rely on FindBoost/CMake, use FindBoost from boost installation
 
 	find_package(Boost 1.83 COMPONENTS program_options REQUIRED)
-	include_directories(${Boost_INCLUDE_DIR})
+	# include_directories(${Boost_INCLUDE_DIR})
 endif()
 
 add_subdirectory(src)
