@@ -22,12 +22,7 @@ brew install cmake ninja boost
 ```
 
 ## Compile and Install
-Inspect common workflow presets:
-```shell
-cmake --workflow --list-presets
-```
-
-Run minimal preset to build the library with `Debug` and `Release` settings into `build-libonly/lib`:
+Run minimal compilation (just the library) with `Debug` and `Release` settings into `build-libonly/lib`:
 ```shell
 cmake --workflow libonly
 ```
@@ -36,22 +31,28 @@ Install the `Release` build of `build-libonly` into `$PWD/local` path:
 cmake --install build-libonly --config Release --prefix $PWD/local
 ```
 
-Configure, build and test for Development with Sanitizers (GCC/Clang/AppleClang):
+## Other Presets
+Inspect workflow presets:
+```shell
+cmake --workflow --list-presets
+```
+
+For example, configure, build and **test** for Development with **Sanitizers** (GCC/Clang/AppleClang):
 ```shell
 cmake --workflow debug-san
 ```
 
-Configuration presets:
+Other configuration presets:
 ```shell
 cmake --list-presets=configure
 ```
 
-Build presets:
+Other build presets:
 ```shell
 cmake --list-presets=build
 ```
 
-Test presets:
+Other test presets:
 ```shell
 cmake --list-presets=test
 ```
