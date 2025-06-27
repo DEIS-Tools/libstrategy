@@ -182,9 +182,6 @@ struct has_from_chars<
 template <typename T>
 constexpr auto has_from_chars_v = has_from_chars<T>::value;
 
-static_assert(has_from_chars_v<double>,
-              "cannot convert string into double fast");
-
 std::vector<double> SimpleTree::parse_key(const std::string &key) {
   auto res = std::vector<double>{};
   if constexpr (has_from_chars_v<double>) { // fast floating point parsing
