@@ -29,7 +29,9 @@
 
 #include <charconv>
 #include <iostream>
+#include <type_traits> // true_type for detecting from_chars
 #include <unordered_set>
+#include <utility> // declval for detecting from_chars
 #include <vector>
 
 using json = nlohmann::json;
@@ -158,28 +160,73 @@ SimpleTree SimpleTree::parse(std::istream &input,
   return tree;
 }
 
+template <typename... Args> using void_t = std::void_t<Args...>;
+
+/// C++17 compile-time test for presence of std::from_chars(const char*, const
+/// char*, T&) Replace it with C++20 concepts later (or perhaps AppleClang will
+/// implement proper from_chars by then). History: C++17 introduced
+/// std::from_chars, but STL vendors were late, then provided only integral
+/// versions...
+template <typename, typename = void>
+struct has_from_chars : std::false_type {
+}; // primary template declaration (used when specializations fail)
+
+template <typename T>
+struct has_from_chars<
+    T,      // template partial specialization
+    void_t< // tests if the following expression computes into a type:
+        decltype(std::from_chars(std::declval<const char *&>(),
+                                 std::declval<const char *&>(),
+                                 std::declval<T &>()))>> : std::true_type {};
+
+template <typename T>
+constexpr auto has_from_chars_v = has_from_chars<T>::value;
+
+static_assert(has_from_chars_v<double>,
+              "cannot convert string into double fast");
+
 std::vector<double> SimpleTree::parse_key(const std::string &key) {
   auto res = std::vector<double>{};
-  auto it = key.c_str();
-  const auto end = it + key.size();
-  if (it != end && *it != '(') {
-    throw base_error("Key is incorrectly formatted");
-  }
-  ++it;
-  while (it != end) {
-    double number;
-    if (auto [p, ec] = std::from_chars(it, end, number); ec == std::errc()) {
-      res.push_back(number);
-      it = p;
-      if (it != end) {
-        if (*it == ')')
-          break;
-        if (*it != ',')
-          throw base_error("expected comma-separated-numbers in key: " + key);
-        ++it;
+  if constexpr (has_from_chars_v<double>) { // fast floating point parsing
+    auto it = key.c_str();
+    const auto end = it + key.size();
+    if (it == end || *it != '(') {
+      throw base_error("incorrectly formatted key ('(' expected): " + key);
+    }
+    ++it;
+    while (it != end && *it != ')') {
+      double number;
+      if (auto [p, ec] = std::from_chars(it, end, number); ec == std::errc()) {
+        res.push_back(number);
+        it = p;
+        if (it != end && *it == ',')
+          ++it;
+      } else {
+        throw base_error("failed to parse number in key: " + key);
       }
-    } else {
-      throw base_error("invalid number in key: " + key);
+    }
+    if (it == end || *it != ')') {
+      throw base_error("incorrectly formatted key (')' expected): " + key);
+    }
+  } else { // fallback to slow stream parsing
+    auto is = std::istringstream{key};
+    char c;
+    if (!is.get(c) || c != '(') {
+      throw base_error("incorrectly formatted key ('(' expected): " + key);
+    }
+    if (is && is.peek() == ')')
+      return res;
+    while (is) {
+      double number;
+      if (is >> number)
+        res.push_back(number);
+      else
+        throw base_error("failed to parse number in key: " + key);
+      if (is.get(c) && c != ',')
+        break;
+    }
+    if (c != ')') {
+      throw base_error("incorrectly formatted key (')' expected): " + key);
     }
   }
   return res;

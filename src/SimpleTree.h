@@ -41,6 +41,8 @@ public:
                           bool subsumption = false, double accuracy = 0);
   static SimpleTree parse(std::istream &, bool simplify, bool subsumption,
                           double accuracy, std::vector<double> &exactness);
+  static std::vector<double> parse_key(const std::string &key);
+
   std::ostream &print(std::ostream &os) const;
   std::ostream &print_c(std::ostream &os, const std::string &name) const;
   double value(const double *disc, const double *cont, uint32_t action) const;
@@ -67,8 +69,6 @@ private:
   using nodemap_t = ptrie::map<signature_t, node_ptr>;
   using json = nlohmann::json;
   SimpleTree() = default;
-
-  static std::vector<double> parse_key(const std::string &key);
 
   struct node_t : std::enable_shared_from_this<node_t> {
     uint32_t _var = std::numeric_limits<uint32_t>::max();
