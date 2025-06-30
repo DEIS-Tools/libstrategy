@@ -47,7 +47,7 @@ std::vector<T> parse_key(const std::string& key)
         }
         ++it;
         while (it != end && *it != ')') {
-            double number;
+            T number;
             if (auto [p, ec] = std::from_chars(it, end, number); ec == std::errc()) {
                 res.push_back(number);
                 it = p;
