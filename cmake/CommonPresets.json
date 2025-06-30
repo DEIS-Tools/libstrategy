@@ -34,8 +34,8 @@
       "inherits": "multi",
       "binaryDir": "${sourceDir}/build-gcc",
       "environment": {
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
+        "CC": "gcc",
+        "CXX": "g++"
       },
       "displayName": "Configure GCC for Ninja Debug/Release"
     },
@@ -44,10 +44,20 @@
       "inherits": "multi",
       "binaryDir": "${sourceDir}/build-clang",
       "environment": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
+        "CC": "clang",
+        "CXX": "clang++"
       },
       "displayName": "Configure Clang for Ninja Debug/Release"
+    },
+    {
+      "name": "clang-san",
+      "inherits": "multi-san",
+      "binaryDir": "${sourceDir}/build-clang-san",
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      },
+      "displayName": "Configure Clang for Ninja Debug/Release with Sanitizers"
     }
   ],
   "buildPresets": [
@@ -81,6 +91,12 @@
       "displayName": "Build with Clang Debug"
     },
     {
+      "name": "debug-clang-san",
+      "inherits": "debug-san",
+      "configurePreset": "clang-san",
+      "displayName": "Build with Clang Debug and Sanitizers"
+    },
+    {
       "name": "release",
       "configurePreset": "multi",
       "configuration": "Release",
@@ -103,6 +119,12 @@
       "inherits": "release",
       "configurePreset": "clang",
       "displayName": "Build with Clang Release"
+    },
+    {
+      "name": "release-clang-san",
+      "inherits": "release-san",
+      "configurePreset": "clang-san",
+      "displayName": "Build with Clang Release and Sanitizers"
     }
   ],
   "testPresets": [
@@ -139,6 +161,12 @@
       "displayName": "Test the Clang Debug"
     },
     {
+      "name": "debug-clang-san",
+      "inherits": "debug-san",
+      "configurePreset": "clang-san",
+      "displayName": "Test the Clang Debug and Sanitizers"
+    },
+    {
       "name": "release",
       "inherits": "default",
       "configurePreset": "multi",
@@ -162,6 +190,12 @@
       "inherits": "release",
       "configurePreset": "clang",
       "displayName": "Test the Clang Release"
+    },
+    {
+      "name": "release-clang-san",
+      "inherits": "release-san",
+      "configurePreset": "clang-san",
+      "displayName": "Test the Clang Release with Sanitizers"
     }
   ],
   "workflowPresets": [
@@ -256,6 +290,24 @@
       ]
     },
     {
+      "name": "debug-clang-san",
+      "displayName": "Configure, Build and Test with Debug and Sanitizers using Clang",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-san"
+        },
+        {
+          "type": "build",
+          "name": "debug-clang-san"
+        },
+        {
+          "type": "test",
+          "name": "debug-clang-san"
+        }
+      ]
+    },
+    {
       "name": "release",
       "displayName": "Configure, Build and Test with Release",
       "steps": [
@@ -324,6 +376,24 @@
         {
           "type": "test",
           "name": "release-clang"
+        }
+      ]
+    },
+    {
+      "name": "release-clang-san",
+      "displayName": "Configure, Build and Test with Release and Sanitizers using Clang",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-san"
+        },
+        {
+          "type": "build",
+          "name": "release-clang-san"
+        },
+        {
+          "type": "test",
+          "name": "release-clang-san"
         }
       ]
     },
