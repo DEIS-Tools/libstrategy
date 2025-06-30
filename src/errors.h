@@ -27,8 +27,9 @@
 
 #include <stdexcept>
 
-struct base_error : std::logic_error {
-  using std::logic_error::logic_error;
+struct base_error : std::logic_error
+{
+    using std::logic_error::logic_error;
 };
 
 #endif /* ERRORS_H */

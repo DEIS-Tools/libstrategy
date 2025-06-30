@@ -24,31 +24,34 @@
 
 BOOST_AUTO_TEST_CASE(DirectoryTest) { BOOST_REQUIRE(getenv("STRATEGY_DIR")); }
 
-BOOST_AUTO_TEST_CASE(Inconsistent1) {
-  std::string strategy = getenv("STRATEGY_DIR");
-  strategy += "/inconsistent1.strategy";
-  std::ifstream in(strategy);
-  auto tree = SimpleTree::parse(in, false, false);
-  double vars[] = {10};
-  auto act18 = tree.value(vars, nullptr, 0);
-  auto act19 = tree.value(vars, nullptr, 1);
-  BOOST_REQUIRE_LT(act18, act19);
+BOOST_AUTO_TEST_CASE(Inconsistent1)
+{
+    std::string strategy = getenv("STRATEGY_DIR");
+    strategy += "/inconsistent1.strategy";
+    std::ifstream in(strategy);
+    auto tree = SimpleTree::parse(in, false, false);
+    double vars[] = {10};
+    auto act18 = tree.value(vars, nullptr, 0);
+    auto act19 = tree.value(vars, nullptr, 1);
+    BOOST_REQUIRE_LT(act18, act19);
 }
 
-BOOST_AUTO_TEST_CASE(Inconsistent1Simplify) {
-  std::string strategy = getenv("STRATEGY_DIR");
-  strategy += "/inconsistent1.strategy";
-  std::ifstream in(strategy);
-  auto tree = SimpleTree::parse(in, true, false);
-  double vars[] = {10};
-  BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));
+BOOST_AUTO_TEST_CASE(Inconsistent1Simplify)
+{
+    std::string strategy = getenv("STRATEGY_DIR");
+    strategy += "/inconsistent1.strategy";
+    std::ifstream in(strategy);
+    auto tree = SimpleTree::parse(in, true, false);
+    double vars[] = {10};
+    BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));
 }
 
-BOOST_AUTO_TEST_CASE(Inconsistent1SimplifySubsumption) {
-  std::string strategy = getenv("STRATEGY_DIR");
-  strategy += "/inconsistent1.strategy";
-  std::ifstream in(strategy);
-  auto tree = SimpleTree::parse(in, true, true);
-  double vars[] = {10};
-  BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));
+BOOST_AUTO_TEST_CASE(Inconsistent1SimplifySubsumption)
+{
+    std::string strategy = getenv("STRATEGY_DIR");
+    strategy += "/inconsistent1.strategy";
+    std::ifstream in(strategy);
+    auto tree = SimpleTree::parse(in, true, true);
+    double vars[] = {10};
+    BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));
 }
