@@ -25,15 +25,10 @@
 #ifndef ERRORS_H
 #define ERRORS_H
 
+#include <stdexcept>
+
 struct base_error : std::logic_error {
   using std::logic_error::logic_error;
-
-  virtual void print(std::ostream &os) const { os << what() << std::endl; }
-
-  friend std::ostream &operator<<(std::ostream &os, const base_error &el) {
-    el.print(os);
-    return os;
-  }
 };
 
 #endif /* ERRORS_H */

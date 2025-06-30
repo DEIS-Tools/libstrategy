@@ -41,7 +41,6 @@ public:
                           bool subsumption = false, double accuracy = 0);
   static SimpleTree parse(std::istream &, bool simplify, bool subsumption,
                           double accuracy, std::vector<double> &exactness);
-  static std::vector<double> parse_key(const std::string &key);
 
   std::ostream &print(std::ostream &os) const;
   std::ostream &print_c(std::ostream &os, const std::string &name) const;

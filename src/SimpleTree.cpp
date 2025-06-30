@@ -158,53 +158,6 @@ SimpleTree SimpleTree::parse(std::istream &input,
   return tree;
 }
 
-std::vector<double> SimpleTree::parse_key(const std::string &key) {
-  auto res = std::vector<double>{};
-  if constexpr (has_from_chars_v<double>) { // fast floating point parsing
-    auto it = key.c_str();
-    const auto end = it + key.size();
-    if (it == end || *it != '(') {
-      throw base_error("incorrectly formatted key ('(' expected): " + key);
-    }
-    ++it;
-    while (it != end && *it != ')') {
-      double number;
-      if (auto [p, ec] = std::from_chars(it, end, number); ec == std::errc()) {
-        res.push_back(number);
-        it = p;
-        if (it != end && *it == ',')
-          ++it;
-      } else {
-        throw base_error("failed to parse number in key: " + key);
-      }
-    }
-    if (it == end || *it != ')') {
-      throw base_error("incorrectly formatted key (')' expected): " + key);
-    }
-  } else { // fallback to slow stream parsing
-    auto is = std::istringstream{key};
-    char c;
-    if (!is.get(c) || c != '(') {
-      throw base_error("incorrectly formatted key ('(' expected): " + key);
-    }
-    if (is && is.peek() == ')')
-      return res;
-    while (is) {
-      double number;
-      if (is >> number)
-        res.push_back(number);
-      else
-        throw base_error("failed to parse number in key: " + key);
-      if (is.get(c) && c != ',')
-        break;
-    }
-    if (c != ')') {
-      throw base_error("incorrectly formatted key (')' expected): " + key);
-    }
-  }
-  return res;
-}
-
 std::pair<double, double> SimpleTree::node_t::compute_min_max() const {
   double mincost = std::numeric_limits<double>::infinity();
   double maxcost = -mincost;

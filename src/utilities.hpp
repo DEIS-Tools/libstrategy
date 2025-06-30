@@ -1,9 +1,16 @@
 #ifndef UTILITIES_HPP
 #define UTILITIES_HPP
 
+#include "errors.h"
+
+/// Please avoid including this header into headers (include into cpp instead)
+/// as it includes streams (instead of iosfwd) and slows down compilation.
+
 #include <charconv>    // from_chars
+#include <sstream>     // fallback if from_chars is not available
 #include <type_traits> // true_type for detecting from_chars
 #include <utility>     // declval for detecting from_chars
+#include <vector>
 
 /// C++17 compile-time test for presence of std::from_chars(const char*, const
 /// char*, T&) Replace it with C++20 concepts later (or perhaps AppleClang will
@@ -24,5 +31,52 @@ struct has_from_chars< // template partial specialization
 
 template <typename T>
 constexpr auto has_from_chars_v = has_from_chars<T>::value;
+
+inline std::vector<double> parse_key(const std::string &key) {
+  auto res = std::vector<double>{};
+  if constexpr (has_from_chars_v<double>) { // fast floating point parsing
+    auto it = key.c_str();
+    const auto end = it + key.size();
+    if (it == end || *it != '(') {
+      throw base_error("incorrectly formatted key ('(' expected): " + key);
+    }
+    ++it;
+    while (it != end && *it != ')') {
+      double number;
+      if (auto [p, ec] = std::from_chars(it, end, number); ec == std::errc()) {
+        res.push_back(number);
+        it = p;
+        if (it != end && *it == ',')
+          ++it;
+      } else {
+        throw base_error("failed to parse number in key: " + key);
+      }
+    }
+    if (it == end || *it != ')') {
+      throw base_error("incorrectly formatted key (')' expected): " + key);
+    }
+  } else { // fallback to slow stream parsing
+    auto is = std::istringstream{key};
+    char c;
+    if (!is.get(c) || c != '(') {
+      throw base_error("incorrectly formatted key ('(' expected): " + key);
+    }
+    if (is && is.peek() == ')')
+      return res;
+    while (is) {
+      double number;
+      if (is >> number)
+        res.push_back(number);
+      else
+        throw base_error("failed to parse number in key: " + key);
+      if (is.get(c) && c != ',')
+        break;
+    }
+    if (c != ')') {
+      throw base_error("incorrectly formatted key (')' expected): " + key);
+    }
+  }
+  return res;
+}
 
 #endif // UTILITIES_HPP
