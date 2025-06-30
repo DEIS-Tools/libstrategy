@@ -33,48 +33,43 @@ struct has_from_chars<  // template partial specialization
 template <typename T>
 constexpr auto has_from_chars_v = has_from_chars<T>::value;
 
-/// Parses keys in a form "(number,number,number)"
+/// Parses numbers from a key in a form of "(number,number,number)"
 template <typename T = double>  // has to be a template, otherwise AppleClang ignores constexpr
 std::vector<T> parse_key(const std::string& key)
 {
     static_assert(std::is_arithmetic_v<T>, "only numeric keys are supported");
     auto res = std::vector<T>{};
+    T number;                             // the number to parse into
     if constexpr (has_from_chars_v<T>) {  // fast floating point parsing
         auto it = key.c_str();
         const auto end = it + key.size();
-        if (it == end || *it != '(') {
+        if (it == end || *it != '(')
             throw base_error("incorrectly formatted key ('(' expected): " + key);
-        }
-        ++it;
-        while (it != end && *it != ')') {
-            T number;
+        if (*++it == ')')
+            return res;
+        while (it != end) {
             if (auto [p, ec] = std::from_chars(it, end, number); ec == std::errc()) {
                 res.push_back(number);
                 it = p;
                 if (it != end && *it == ',')
                     ++it;
-            } else {
+                else
+                    break;
+            } else
                 throw base_error("failed to parse number in key: " + key);
-            }
         }
-        if (it == end || *it != ')') {
+        if (it == end || *it != ')')
             throw base_error("incorrectly formatted key (')' expected): " + key);
-        }
     } else {  // fallback to slow stream parsing (AppleClang does not support from_chars)
         auto is = std::istringstream{key};
         char c;
-        if (!is.get(c) || c != '(') {
+        if (!is.get(c) || c != '(')
             throw base_error("incorrectly formatted key ('(' expected): " + key);
-        }
         if (is && is.peek() == ')')
             return res;
-        while (is) {
-            double number;
-            if (is >> number)
-                res.push_back(number);
-            else
-                throw base_error("failed to parse number in key: " + key);
-            if (is.get(c) && c != ',')
+        while (is >> number) {
+            res.push_back(number);
+            if (!is.get(c) || c != ',')
                 break;
         }
         if (c != ')') {
