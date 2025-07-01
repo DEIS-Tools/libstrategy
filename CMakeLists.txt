@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(cmake/warnings.cmake)
+include(cmake/sanitizers.cmake)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -21,7 +22,7 @@ include(cmake/nlohmann_json.cmake)
 
 if(NOT LIBSTRATEGY_OnlyLibrary)
 	cmake_policy(SET CMP0069 NEW) # INTERPROCEDURAL_OPTIMIZATIONS flags
-	if (CMAKE_MAJOR_VERSION GREATER_EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 30)
+	if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.30.0")
     	cmake_policy(SET CMP0167 NEW) # use FindBoost from boost installation (as opposed to CMake own)
 	endif ()
 	find_package(Boost 1.83 COMPONENTS program_options REQUIRED)

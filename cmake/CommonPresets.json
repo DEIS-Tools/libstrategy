@@ -22,10 +22,10 @@
       "name": "multi-san",
       "inherits": "multi",
       "binaryDir": "${sourceDir}/build-multi-san",
-      "environment": {
-        "CFLAGS": "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer",
-        "CXXFLAGS": "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer",
-        "LDFLAGS": "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer"
+      "cacheVariables": {
+        "UBSAN" : { "type": "BOOL", "value": "ON"},
+        "ASAN" : { "type": "BOOL", "value": "ON"},
+        "SSP" : { "type": "BOOL", "value": "ON"}
       },
       "displayName": "Configure for Ninja Debug/Release with Sanitizers"
     },
