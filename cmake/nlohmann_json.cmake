@@ -31,9 +31,9 @@ if (nlohmann_json_FOUND) # find_package
    get_target_property(nlohmann_json_INCLUDE_DIRS nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
    message(STATUS "Found nlohmann_json: ${nlohmann_json_INCLUDE_DIRS}")
 else (nlohmann_json_FOUND) # FetchContent
-   message(STATUS "Fetched doctest: ${nlohman_json_SOURCE_DIR}")
+   message(STATUS "Fetched nlohmann_json: ${nlohmann_json_SOURCE_DIR}")
 endif (nlohmann_json_FOUND)
 
-if (TARGET nlohman_json::nlohman_json)
+if (TARGET nlohmann_json::nlohmann_json)
    message(STATUS "    Available target: nlohman_json::nlohman_json")
 endif ()
