@@ -1,26 +1,30 @@
-find_package(ptrie 1.1.1 QUIET)
-if (ptrie_FOUND)
+#set(FETCHCONTENT_QUIET ON)
+#set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+include(FetchContent)
+FetchContent_Declare(ptrie
+        GIT_REPOSITORY https://github.com/petergjoel/ptrie
+        GIT_TAG v1.1.1
+        GIT_SHALLOW TRUE  # download specific revision only (git clone --depth 1)
+        GIT_PROGRESS TRUE # show download progress in Ninja
+        USES_TERMINAL_DOWNLOAD TRUE
+        FIND_PACKAGE_ARGS 1.1.1)
+
+set(PTRIE_BuildTests OFF CACHE BOOL "Build the unit tests when BUILD_TESTING is enabled.")
+set(PTRIE_BuildBenchmark OFF CACHE BOOL "Build the simple benchmark suite")
+set(PTRIE_AddressSanitizer OFF CACHE BOOL "Enables address sanitization during compilation.")
+set(PTRIE_GetDependencies OFF CACHE BOOL "Fetch external dependencies from web.")
+FetchContent_MakeAvailable(ptrie)
+
+if (ptrie_FOUND) # find_package
    get_target_property(ptrie_INCLUDE_DIRS ptrie::ptrie INTERFACE_INCLUDE_DIRECTORIES)
    message(STATUS "Found ptrie: ${ptrie_INCLUDE_DIRS}")
-else (ptrie_FOUND)
-   message(STATUS "Failed to find ptrie, going to fetch from source")
-   set(PTRIE_BuildTests OFF CACHE BOOL "Build the unit tests when BUILD_TESTING is enabled.")
-   set(PTRIE_BuildBenchmark OFF CACHE BOOL "Build the simple benchmark suite")
-   set(PTRIE_AddressSanitizer OFF CACHE BOOL "Enables address sanitization during compilation.")
-   set(PTRIE_GetDependencies OFF CACHE BOOL "Fetch external dependencies from web.")
-   set(FETCHCONTENT_QUIET ON)
-   set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-   include(FetchContent)
-   FetchContent_Declare(ptrie
-       GIT_REPOSITORY https://github.com/petergjoel/ptrie
-       GIT_TAG v1.1.1
-       GIT_SHALLOW TRUE  # download specific revision only (git clone --depth 1)
-       GIT_PROGRESS TRUE # show download progress in Ninja
-       FIND_PACKAGE_ARGS NAMES ptrie
-       USES_TERMINAL_DOWNLOAD TRUE)
-   FetchContent_MakeAvailable(ptrie)
+else (ptrie_FOUND) # fetch_content
    message(STATUS "Got ptrie: ${ptrie_SOURCE_DIR}")
    # Workaround until ptrie exports proper cmake config:
    add_library(ptrie::ptrie INTERFACE IMPORTED GLOBAL)
    target_include_directories(ptrie::ptrie INTERFACE ${ptrie_SOURCE_DIR}/src)
 endif (ptrie_FOUND)
+
+if (TARGET ptrie::ptrie)
+   message(STATUS "    Available target: ptrie::ptrie")
+endif ()
