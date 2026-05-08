@@ -1,0 +1,56 @@
+{
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "include": ["cmake/CommonPresets.json"],
+  "configurePresets": [
+    {
+      "name": "libonly",
+      "inherits": "multi",
+      "binaryDir": "${sourceDir}/build-libonly",
+      "cacheVariables": {
+        "LIBSTRATEGY_TESTS": "OFF" ,
+        "LIBSTRATEGY_OnlyLibrary": "ON"
+      },
+      "displayName": "Configure Library-Only for Debug and Release"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "libonly-release",
+      "inherits": "release",
+      "configurePreset": "libonly",
+      "displayName": "Build Library-Only for Debug"
+    },
+    {
+      "name": "libonly-debug",
+      "inherits": "debug",
+      "configurePreset": "libonly",
+      "displayName": "Build Library-Only for Release"
+    }
+  ],
+  "testPresets": [],
+  "workflowPresets": [
+    {
+      "name": "libonly",
+      "displayName": "Configure and Build Library-Only for Debug and Release (no testing)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "libonly"
+        },
+        {
+          "type": "build",
+          "name": "libonly-release"
+        },
+        {
+          "type": "build",
+          "name": "libonly-debug"
+        }
+      ]
+    }
+  ]
+}
