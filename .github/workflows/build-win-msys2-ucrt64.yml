@@ -1,17 +1,17 @@
 ---
-name: Build for macOS-13
+name: Build for Windows-MSYS2-UCRT64
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - src/**
       - test/**
       - cmake/**
       - CMakeLists.txt
       - CMakePresets.json
-      - .github/workflows/build-macos-13.yml
+      - .github/workflows/build-win-msys2-ucrt64.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     types: [synchronize, opened, reopened, ready_for_review]
     paths:
       - src/**
@@ -19,31 +19,33 @@ on:
       - cmake/**
       - CMakeLists.txt
       - CMakePresets.json
-      - .github/workflows/build-macos-13.yml
+      - .github/workflows/build-win-msys2-ucrt64.yml
   workflow_dispatch:
 
 jobs:
-  macOS-13:
-    runs-on: macos-13
+  windows-msys2-ucrt64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     env:
-      CMAKE_GENERATOR: Ninja
+      CMAKE_GENERATOR: "Ninja Multi-Config"
+      CTEST_OUTPUT_ON_FAILURE: 1
+      BUILD_DIR: build
     steps:
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: msys2/setup-msys2@v2
         with:
-          xcode-version: '14.3.1'
+          msystem: UCRT64
+          update: true
+          install: git cmake ninja mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-boost
       - name: Setup Runner Environment
         run: |
           uname -a
-          xcrun --show-sdk-version
-          CORES=$(sysctl -n hw.ncpu)
+          CORES=$(nproc)
           echo "CMAKE_BUILD_PARALLEL_LEVEL=$CORES" >> $GITHUB_ENV
           echo "CTEST_TEST_PARALLEL_LEVEL=$CORES" >> $GITHUB_ENV
           echo "CTEST_TEST_LOAD=$CORES" >> $GITHUB_ENV
-      - name: Install Build Tools
-        run: |
-          brew update
-          brew install cmake ninja boost
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Configure Multi-Config
         run: cmake --preset multi-san
       - name: Build Debug

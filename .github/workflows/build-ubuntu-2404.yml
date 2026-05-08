@@ -2,7 +2,7 @@
 name: Build for Ubuntu-24.04
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - src/**
       - test/**
@@ -11,7 +11,7 @@ on:
       - CMakePresets.json
       - .github/workflows/build-ubuntu-2404.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     types: [synchronize, opened, reopened, ready_for_review]
     paths:
       - src/**
@@ -40,7 +40,7 @@ jobs:
         run: |
           sudo apt-get -qq update
           sudo apt-get -qq install cmake ninja-build g++ libboost-program-options-dev libboost-test-dev
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Configure Multi-Config
         run: cmake --preset multi-san
       - name: Build Debug

@@ -2,7 +2,7 @@
 name: Build for macOS-14
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - src/**
       - test/**
@@ -11,7 +11,7 @@ on:
       - CMakePresets.json
       - .github/workflows/build-macos-14.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     types: [synchronize, opened, reopened, ready_for_review]
     paths:
       - src/**
@@ -43,7 +43,7 @@ jobs:
         run: |
           brew update
           brew install cmake ninja boost
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Configure Multi-Config
         run: cmake --preset multi-san
       - name: Build Debug
