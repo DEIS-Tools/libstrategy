@@ -37,7 +37,7 @@ jobs:
         with:
           msystem: UCRT64
           update: true
-          install: git cmake ninja mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-boost
+          install: mingw-w64-ucrt-x86_64-git mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-boost
       - name: Setup Runner Environment
         run: |
           uname -a
@@ -47,12 +47,12 @@ jobs:
           echo "CTEST_TEST_LOAD=$CORES" >> $GITHUB_ENV
       - uses: actions/checkout@v5
       - name: Configure Multi-Config
-        run: cmake --preset multi-san
+        run: cmake --preset multi
       - name: Build Debug
-        run: cmake --build --preset debug-san
+        run: cmake --build --preset debug
       - name: Test Debug
-        run: ctest --preset debug-san
+        run: ctest --preset debug
       - name: Build Release
-        run: cmake --build --preset release-san
+        run: cmake --build --preset release
       - name: Test Release
-        run: ctest --preset release-san
+        run: ctest --preset release
