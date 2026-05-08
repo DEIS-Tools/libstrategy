@@ -2,17 +2,15 @@
 #set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 include(FetchContent)
 FetchContent_Declare(ptrie
-        GIT_REPOSITORY https://github.com/petergjoel/ptrie
-        GIT_TAG v1.1.1
+        GIT_REPOSITORY https://github.com/DEIS-Tools/ptrie
+        GIT_TAG v1.1.2
         GIT_SHALLOW TRUE  # download specific revision only (git clone --depth 1)
         GIT_PROGRESS TRUE # show download progress in Ninja
         USES_TERMINAL_DOWNLOAD TRUE
-        FIND_PACKAGE_ARGS 1.1.1)
+        FIND_PACKAGE_ARGS 1.1.2)
 
 set(PTRIE_BuildTests OFF CACHE BOOL "Build the unit tests when BUILD_TESTING is enabled.")
 set(PTRIE_BuildBenchmark OFF CACHE BOOL "Build the simple benchmark suite")
-set(PTRIE_AddressSanitizer OFF CACHE BOOL "Enables address sanitization during compilation.")
-set(PTRIE_GetDependencies OFF CACHE BOOL "Fetch external dependencies from web.")
 FetchContent_MakeAvailable(ptrie)
 
 if (ptrie_FOUND) # find_package
