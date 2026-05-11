@@ -703,7 +703,7 @@ void SimpleTree::node_t::insert(std::vector<double>& key, json& tree, size_t act
     consistent(key.size() + 1);
 }
 
-void SimpleTree::node_t::consistent(size_t prefix) const
+void SimpleTree::node_t::consistent(size_t prefix [[maybe_unused]]) const
 {
     return;
 #ifndef NDEBUG
