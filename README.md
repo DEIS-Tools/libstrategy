@@ -22,13 +22,13 @@ brew install cmake ninja boost
 ```
 
 ## Compile and Install
-Run minimal compilation (just the library) with `Debug` and `Release` settings into `build-libonly/lib`:
+Run minimal compilation (just the library) with `Debug` and `Release` settings into `build-quick/lib`:
 ```shell
-cmake --workflow libonly
+cmake --workflow --preset quick-release
 ```
 Install the `Release` build of `build-libonly` into `$PWD/local` path:
 ```shell
-cmake --install build-libonly --config Release --prefix $PWD/local
+cmake --install build-quick --config Release --prefix $PWD/local
 ```
 
 ## Other Presets
