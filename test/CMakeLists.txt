@@ -4,7 +4,6 @@ include_directories (${CMAKE_SOURCE_DIR}/src)
 add_executable (utilities_test utilities_test.cpp)
 add_test(NAME utilities_test COMMAND utilities_test)
 
-
 add_executable (SimpleTree_test SimpleTree_test.cpp)
 target_link_libraries(SimpleTree_test PRIVATE SimpleTree Boost::unit_test_framework)
 add_test(NAME SimpleTree_test COMMAND SimpleTree_test)

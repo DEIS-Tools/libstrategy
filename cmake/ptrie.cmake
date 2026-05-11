@@ -7,6 +7,7 @@ FetchContent_Declare(ptrie
         GIT_SHALLOW TRUE  # download specific revision only (git clone --depth 1)
         GIT_PROGRESS TRUE # show download progress in Ninja
         USES_TERMINAL_DOWNLOAD TRUE
+        EXCLUDE_FROM_ALL # don't build if not used
         FIND_PACKAGE_ARGS 1.1.2)
 
 set(PTRIE_BuildTests OFF CACHE BOOL "Build the unit tests when BUILD_TESTING is enabled.")

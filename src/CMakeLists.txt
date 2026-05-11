@@ -1,5 +1,5 @@
 add_library(SimpleTree OBJECT SimpleTree.cpp)
-target_link_libraries(SimpleTree PUBLIC ptrie::ptrie nlohmann_json::nlohmann_json)
+target_link_libraries(SimpleTree PUBLIC ptrie::ptrie PRIVATE nlohmann_json::nlohmann_json)
 
 add_library(strategy SHARED libz2s.cpp ZonotopStrategy.cpp)
 target_link_libraries(strategy PUBLIC SimpleTree)
@@ -13,10 +13,5 @@ if(NOT LIBSTRATEGY_OnlyLibrary)
     target_link_libraries(z2s PUBLIC SimpleTree Boost::program_options)
 endif()
 
-install(TARGETS strategy strategyStatic
-	RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
-install (FILES  errors.h  SimpleTree.h ZonotopStrategy.h DESTINATION include/libstrategy)
-
-
+install(TARGETS strategy strategyStatic)
+install(FILES  errors.h  SimpleTree.h ZonotopStrategy.h DESTINATION include/libstrategy)

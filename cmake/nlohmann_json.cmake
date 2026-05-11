@@ -9,6 +9,7 @@ FetchContent_Declare(nlohmann_json
            GIT_SHALLOW TRUE  # download specific revision only (git clone --depth 1)
            GIT_PROGRESS TRUE # show download progress in Ninja
            USES_TERMINAL_DOWNLOAD TRUE
+           EXCLUDE_FROM_ALL # don't build if not used
            FIND_PACKAGE_ARGS 3.12.0)
 
 set(NLOHMANN_JSON_BUILD_MODULES     OFF CACHE BOOL "Build C++ modules support")
