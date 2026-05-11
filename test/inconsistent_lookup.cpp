@@ -21,14 +21,17 @@
 
 #include <boost/test/unit_test.hpp>
 #include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 BOOST_AUTO_TEST_CASE(DirectoryTest) { BOOST_REQUIRE(getenv("STRATEGY_DIR")); }
 
+const auto strategy_path = fs::path{getenv("STRATEGY_DIR")} / "inconsistent1.strategy";
+
 BOOST_AUTO_TEST_CASE(Inconsistent1)
 {
-    std::string strategy = getenv("STRATEGY_DIR");
-    strategy += "/inconsistent1.strategy";
-    std::ifstream in(strategy);
+    auto in = std::ifstream{strategy_path};
     auto tree = SimpleTree::parse(in, false, false);
     double vars[] = {10};
     auto act18 = tree.value(vars, nullptr, 0);
@@ -38,9 +41,7 @@ BOOST_AUTO_TEST_CASE(Inconsistent1)
 
 BOOST_AUTO_TEST_CASE(Inconsistent1Simplify)
 {
-    std::string strategy = getenv("STRATEGY_DIR");
-    strategy += "/inconsistent1.strategy";
-    std::ifstream in(strategy);
+    auto in = std::ifstream{strategy_path};
     auto tree = SimpleTree::parse(in, true, false);
     double vars[] = {10};
     BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));
@@ -48,9 +49,7 @@ BOOST_AUTO_TEST_CASE(Inconsistent1Simplify)
 
 BOOST_AUTO_TEST_CASE(Inconsistent1SimplifySubsumption)
 {
-    std::string strategy = getenv("STRATEGY_DIR");
-    strategy += "/inconsistent1.strategy";
-    std::ifstream in(strategy);
+    auto in = std::ifstream{strategy_path};
     auto tree = SimpleTree::parse(in, true, true);
     double vars[] = {10};
     BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));

@@ -26,11 +26,9 @@ set(JSON_MultipleHeaders            ON  CACHE BOOL "Use non-amalgamated version 
 set(JSON_SystemInclude              OFF CACHE BOOL "Include as system headers (skip for clang-tidy).")
 
 FetchContent_MakeAvailable(nlohmann_json)
-message(STATUS "Got nlohmann_json: ${nlohmann_json_SOURCE_DIR}")
 
 if (nlohmann_json_FOUND) # find_package
-   get_target_property(nlohmann_json_INCLUDE_DIRS nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
-   message(STATUS "Found nlohmann_json: ${nlohmann_json_INCLUDE_DIRS}")
+   message(STATUS "Found nlohmann_json: ${nlohmann_json_DIRS}")
 else (nlohmann_json_FOUND) # FetchContent
    message(STATUS "Fetched nlohmann_json: ${nlohmann_json_SOURCE_DIR}")
 endif (nlohmann_json_FOUND)

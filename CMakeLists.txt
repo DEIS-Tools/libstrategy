@@ -10,15 +10,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-include(cmake/warnings.cmake)
-include(cmake/sanitizers.cmake)
-
 option(LIBSTRATEGY_TESTS "libstrategy Unit Tests" ON)
 option(LIBSTRATEGY_OnlyLibrary "Build only the library (no binary utilities)" OFF)
 
-include(cmake/boost.cmake)
-include(cmake/nlohmann_json.cmake)
-include(cmake/ptrie.cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(warnings)
+include(sanitizers)
+include(nlohmann_json)
+include(ptrie)
+if (LIBSTRATEGY_TESTS OR NOT LIBSTRATEGY_OnlyLibrary)
+    include(boost)
+endif()
 
 if(NOT LIBSTRATEGY_OnlyLibrary)
 	cmake_policy(SET CMP0069 NEW) # INTERPROCEDURAL_OPTIMIZATIONS flags

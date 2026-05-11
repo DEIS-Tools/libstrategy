@@ -15,10 +15,9 @@ set(PTRIE_BuildBenchmark OFF CACHE BOOL "Build the simple benchmark suite")
 FetchContent_MakeAvailable(ptrie)
 
 if (ptrie_FOUND) # find_package
-   get_target_property(ptrie_INCLUDE_DIRS ptrie::ptrie INTERFACE_INCLUDE_DIRECTORIES)
-   message(STATUS "Found ptrie: ${ptrie_INCLUDE_DIRS}")
+   message(STATUS "Found ptrie: ${ptrie_DIR}")
 else (ptrie_FOUND) # fetch_content
-   message(STATUS "Got ptrie: ${ptrie_SOURCE_DIR}")
+   message(STATUS "Fetched ptrie: ${ptrie_SOURCE_DIR}")
    # Workaround until ptrie exports proper cmake config:
    add_library(ptrie::ptrie INTERFACE IMPORTED GLOBAL)
    target_include_directories(ptrie::ptrie INTERFACE ${ptrie_SOURCE_DIR}/src)

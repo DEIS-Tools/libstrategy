@@ -33,6 +33,18 @@ Install the `Release` build of `build-libonly` into `$PWD/local` path:
 cmake --install build-quick --config Release --prefix $PWD/local
 ```
 
+## Example Usage
+Directory [example](example) contains minimal example demonstrating how to use the library.
+
+Test the example with libstrategy installed into [local](local) directory:
+```shell
+cmake -S example -B build-example -DCMAKE_PREFIX_PATH=$PWD/local -DCMAKE_MODULE_PATH=$PWD/cmake
+```
+```shell
+cmake --build build-example
+ctest --test-dit build-example --output-on-failure
+```
+
 ## Other Presets
 Inspect workflow presets:
 ```shell
