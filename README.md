@@ -13,12 +13,14 @@ Full project requires:
 
 For Ubuntu 24.04 install build tools and library dependencies:
 ```shell
-sudo apt install cmake ninja-build g++ libboost-program-options-dev libboost-test-dev
+sudo apt install cmake ninja-build g++ 
+sudo apt install libboost-program-options-dev libboost-test-dev  # optional
 ```
 
 For macOS install build tools and library dependencies:
 ```shell
-brew install cmake ninja boost
+brew install cmake ninja gcc
+brew install boost  # optional
 ```
 
 ## Compile and Install
@@ -39,7 +41,7 @@ cmake --workflow --list-presets
 
 For example, configure, build and **test** for Development with **Sanitizers** (GCC/Clang/AppleClang):
 ```shell
-cmake --workflow debug-san
+cmake --workflow --preset debug-san
 ```
 
 Other configuration presets:
