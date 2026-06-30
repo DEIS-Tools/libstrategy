@@ -7,4 +7,5 @@ include(libstrategy)
 
 add_executable(example example.cpp)
 target_link_libraries(example PRIVATE libstrategy::strategy)
+enable_testing()
 add_test(NAME example COMMAND example)

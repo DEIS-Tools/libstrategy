@@ -24,11 +24,11 @@ brew install boost  # optional
 ```
 
 ## Compile and Install
-Run minimal compilation (just the library) with `Debug` and `Release` settings into `build-quick/lib`:
+Run minimal compilation (just the library) with `Release` settings into `build-quick/lib`:
 ```shell
 cmake --workflow --preset quick-release
 ```
-Install the `Release` build of `build-libonly` into `$PWD/local` path:
+Install the `Release` build of `build-quick` into `$PWD/local` path:
 ```shell
 cmake --install build-quick --config Release --prefix $PWD/local
 ```
@@ -42,7 +42,7 @@ cmake -S example -B build-example -DCMAKE_PREFIX_PATH=$PWD/local -DCMAKE_MODULE_
 ```
 ```shell
 cmake --build build-example
-ctest --test-dit build-example --output-on-failure
+ctest --test-dir build-example --output-on-failure
 ```
 
 ## Other Presets
