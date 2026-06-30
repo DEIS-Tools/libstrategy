@@ -6,7 +6,7 @@ FetchContent_Declare(libstrategy
         GIT_PROGRESS TRUE # show download progress in Ninja
         USES_TERMINAL_DOWNLOAD TRUE
         EXCLUDE_FROM_ALL # don't build if not used
-        FIND_PACKAGE_ARGS 1.1.2)
+        FIND_PACKAGE_ARGS 1.0.9)
 
 set(LIBSTRATEGY_TESTS OFF CACHE BOOL "libstrategy Unit Tests")
 set(LIBSTRATEGY_OnlyLibrary ON CACHE BOOL "Build only the library (no binary utilities)")
