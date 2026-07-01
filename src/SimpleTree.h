@@ -91,7 +91,8 @@ struct ptrie::byte_iterator<SimpleTree::signature_t>
         return sizeof(SimpleTree::signature_t);
     }
 
-    static constexpr bool continious() { return true; }
+    [[deprecated]] static constexpr bool continious() { return true; }
+    static constexpr bool continuous() { return true; }
 
     // add read_blob, write_blob
 };
