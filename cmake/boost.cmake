@@ -11,7 +11,7 @@ FetchContent_Declare(Boost
         #GIT_PROGRESS TRUE # show download progress in Ninja
         USES_TERMINAL_DOWNLOAD TRUE
         EXCLUDE_FROM_ALL # don't build if not used
-        FIND_PACKAGE_ARGS 1.91.0 COMPONENTS program_options unit_test_framework)
+        FIND_PACKAGE_ARGS 1.91.0 COMPONENTS unit_test_framework)
 
 set(BOOST_ENABLE_MPI OFF CACHE BOOL "Boost.MPI and its dependents (requires MPI, CMake 3.10)")
 set(BOOST_ENABLE_PYTHON OFF CACHE BOOL "Boost.Python and its dependents (requires Python, CMake 3.14)")
@@ -27,9 +27,6 @@ else (Boost_program_options_FOUND) # fetch_content
    message(STATUS "Got Boost: ${Boost_SOURCE_DIR}")
 endif (Boost_FOUND)
 
-if (TARGET Boost::program_options)
-   message(STATUS "    Available target: Boost::program_options")
-endif ()
 if (TARGET Boost::unit_test_framework)
    message(STATUS "    Available target: Boost::unit_test_framework")
 endif ()

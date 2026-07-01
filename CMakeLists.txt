@@ -19,7 +19,7 @@ include(warnings)
 include(sanitizers)
 include(nlohmann_json)
 include(ptrie)
-if (LIBSTRATEGY_TESTS OR NOT LIBSTRATEGY_OnlyLibrary)
+if (LIBSTRATEGY_TESTS)
     include(boost)
 endif()
 

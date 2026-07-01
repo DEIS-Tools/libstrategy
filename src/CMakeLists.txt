@@ -24,7 +24,7 @@ add_library(libstrategy::strategyStatic ALIAS strategyStatic)
 
 if(NOT LIBSTRATEGY_OnlyLibrary)
     add_executable(z2s main.cpp)
-    target_link_libraries(z2s PUBLIC ZonotopStrategy SimpleTree Boost::program_options)
+    target_link_libraries(z2s PUBLIC ZonotopStrategy SimpleTree)
 endif()
 
 include(CMakePackageConfigHelpers)
