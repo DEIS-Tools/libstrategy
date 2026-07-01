@@ -11,7 +11,7 @@ FetchContent_Declare(Boost
         #GIT_PROGRESS TRUE # show download progress in Ninja
         USES_TERMINAL_DOWNLOAD TRUE
         EXCLUDE_FROM_ALL # don't build if not used
-        FIND_PACKAGE_ARGS 1.91.0)
+        FIND_PACKAGE_ARGS 1.91.0 COMPONENTS program_options unit_test_framework)
 
 set(BOOST_ENABLE_MPI OFF CACHE BOOL "Boost.MPI and its dependents (requires MPI, CMake 3.10)")
 set(BOOST_ENABLE_PYTHON OFF CACHE BOOL "Boost.Python and its dependents (requires Python, CMake 3.14)")
