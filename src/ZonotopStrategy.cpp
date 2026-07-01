@@ -118,7 +118,7 @@ ZonotopStrategy ZonotopStrategy::parse(std::istream& input)
 bool ZonotopStrategy::add(std::vector<bound_t>& bounds, size_t state)
 {
     if (_root == nullptr) {
-        _root = std::make_shared<node_t>();
+        _root = std::make_shared<Node>();
         _root->_varid = 0;
         _root->_limit = bounds[0]._lower;
     }
@@ -126,8 +126,8 @@ bool ZonotopStrategy::add(std::vector<bound_t>& bounds, size_t state)
     return rec_insert(_root.get(), bounds, handled, state);
 }
 
-bool ZonotopStrategy::rec_insert(node_t* node, std::vector<bound_t>& bounds,
-                                 std::vector<std::pair<bool, bool>>& handled, size_t state)
+bool ZonotopStrategy::rec_insert(Node* node, std::vector<bound_t>& bounds, std::vector<std::pair<bool, bool>>& handled,
+                                 size_t state)
 {
     auto nid = node->_varid;
     assert(nid < bounds.size());
@@ -152,7 +152,7 @@ bool ZonotopStrategy::rec_insert(node_t* node, std::vector<bound_t>& bounds,
         }
 
         if (node->_low == nullptr) {
-            node->_low = std::make_shared<node_t>();
+            node->_low = std::make_shared<Node>();
             node->_low->_varid = nid;
             node->_low->_parent = node;
             node->_low->_limit = (!handled[nid].first ? bounds[nid]._lower : bounds[nid]._upper);
@@ -179,7 +179,7 @@ bool ZonotopStrategy::rec_insert(node_t* node, std::vector<bound_t>& bounds,
         }
 
         if (node->_high == nullptr) {
-            node->_high = std::make_shared<node_t>();
+            node->_high = std::make_shared<Node>();
             node->_high->_parent = node;
             node->_high->_varid = nid;
             node->_high->_limit = (!handled[nid].first ? bounds[nid]._lower : bounds[nid]._upper);
@@ -189,13 +189,13 @@ bool ZonotopStrategy::rec_insert(node_t* node, std::vector<bound_t>& bounds,
             handled[node->_varid].first = false;
     } else {
         if (node->_low == nullptr) {
-            node->_low = std::make_shared<node_t>();
+            node->_low = std::make_shared<Node>();
             node->_low->_varid = nid;
             node->_low->_parent = node;
             node->_low->_limit = (!handled[nid].first ? bounds[nid]._lower : bounds[nid]._upper);
         }
         if (node->_high == nullptr) {
-            node->_high = std::make_shared<node_t>();
+            node->_high = std::make_shared<Node>();
             node->_high->_parent = node;
             node->_high->_varid = nid;
             node->_high->_limit = (!handled[nid].first ? bounds[nid]._lower : bounds[nid]._upper);
@@ -207,7 +207,7 @@ bool ZonotopStrategy::rec_insert(node_t* node, std::vector<bound_t>& bounds,
     return col;
 }
 
-void ZonotopStrategy::try_merge(node_t* node, size_t state)
+void ZonotopStrategy::try_merge(Node* node, size_t state)
 {
     if (node == nullptr)
         return;
@@ -234,7 +234,7 @@ void ZonotopStrategy::try_merge(node_t* node, size_t state)
     }
 }
 
-std::ostream& ZonotopStrategy::node_t::print(std::ostream& os, const ZonotopStrategy* parent, size_t tabs) const
+std::ostream& ZonotopStrategy::Node::print(std::ostream& os, const ZonotopStrategy* parent, size_t tabs) const
 {
     os << Tabs{tabs};
     os << "{\"var\":" << _varid << ",\"bound\":" << _limit;
@@ -365,7 +365,7 @@ double ZonotopStrategy::get_max(size_t dimen) const { return _root->get_max(dime
 
 double ZonotopStrategy::get_min(size_t dimen) const { return _root->get_min(dimen); }
 
-double ZonotopStrategy::node_t::get_max(size_t dimen) const
+double ZonotopStrategy::Node::get_max(size_t dimen) const
 {
     double maxval = _varid == dimen ? _limit : -std::numeric_limits<double>::infinity();
     if (_high)
@@ -375,7 +375,7 @@ double ZonotopStrategy::node_t::get_max(size_t dimen) const
     return maxval;
 }
 
-double ZonotopStrategy::node_t::get_min(size_t dimen) const
+double ZonotopStrategy::Node::get_min(size_t dimen) const
 {
     double minval = _varid == dimen ? _limit : std::numeric_limits<double>::infinity();
     if (_high)
@@ -420,7 +420,7 @@ std::ostream& ZonotopStrategy::print_c(std::ostream& stream, std::string functio
     return stream;
 }
 
-std::ostream& ZonotopStrategy::node_t::print_c(std::ostream& os, size_t tabs) const
+std::ostream& ZonotopStrategy::Node::print_c(std::ostream& os, size_t tabs) const
 {
     if (_low != nullptr || !_low_patterns.empty()) {
         os << Tabs{tabs};

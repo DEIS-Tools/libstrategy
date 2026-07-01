@@ -52,24 +52,24 @@ public:
     const std::vector<std::string>& continous_features() const { return _pointvars; }
 
 private:
-    struct node_t;
-    using node_ptr = std::shared_ptr<node_t>;
+    struct Node;
+    using NodePtr = std::shared_ptr<Node>;
     struct signature_t
     {
         uint32_t _var{0};
         double _limit{0};
-        node_t* _low{nullptr};
-        node_t* _high{nullptr};
+        Node* _low{nullptr};
+        Node* _high{nullptr};
     } __attribute__((packed));
     friend struct ptrie::byte_iterator<signature_t>;
 
-    using nodemap_t = ptrie::map<signature_t, node_ptr>;
+    using nodemap_t = ptrie::map<signature_t, NodePtr>;
     SimpleTree() = default;
 
     std::vector<std::string> _actions;
     std::vector<std::string> _statevars;
     std::vector<std::string> _pointvars;
-    node_ptr _root;
+    NodePtr _root;
     bool _is_minimization = true;
 };
 

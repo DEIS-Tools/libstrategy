@@ -3,12 +3,14 @@ include(GNUInstallDirs)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 add_library(SimpleTree OBJECT SimpleTree.cpp)
-target_link_libraries(SimpleTree PUBLIC ptrie::ptrie PRIVATE nlohmann_json::nlohmann_json)
 
+target_link_libraries(SimpleTree PUBLIC ptrie::ptrie PRIVATE nlohmann_json::nlohmann_json)
+target_compile_options(SimpleTree PUBLIC ${LIBSTRATEGY_WARNINGS})
 add_library(ZonotopStrategy OBJECT ZonotopStrategy.cpp)
 target_link_libraries(ZonotopStrategy PUBLIC ptrie::ptrie PRIVATE nlohmann_json::nlohmann_json)
 
 add_library(libz2s OBJECT libz2s.cpp)
+target_compile_options(libz2s PUBLIC ${LIBSTRATEGY_WARNINGS})
 target_link_libraries(libz2s PUBLIC ptrie::ptrie)
 
 add_library(strategy SHARED $<TARGET_OBJECTS:libz2s> $<TARGET_OBJECTS:ZonotopStrategy> $<TARGET_OBJECTS:SimpleTree>)
@@ -24,6 +26,7 @@ add_library(libstrategy::strategyStatic ALIAS strategyStatic)
 
 if(NOT LIBSTRATEGY_OnlyLibrary)
     add_executable(z2s main.cpp)
+    target_compile_options(z2s PUBLIC ${LIBSTRATEGY_WARNINGS})
     target_link_libraries(z2s PUBLIC ZonotopStrategy SimpleTree)
 endif()
 
