@@ -55,6 +55,7 @@ bool is_option(std::string_view s)
     return s.size() > 1 && s[0] == '-' && !(std::isdigit(static_cast<unsigned char>(s[1])) || s[1] == '.');
 }
 
+#if defined(__cpp_lib_to_chars)
 double to_double(std::string_view s)
 {
     double value;
@@ -65,6 +66,26 @@ double to_double(std::string_view s)
     }
     return value;
 }
+#else
+// AppleClang's libc++ does not implement the floating-point std::from_chars
+// overloads yet, so fall back to std::stod there.
+double to_double(std::string_view s)
+{
+    std::string str(s);
+    size_t pos = 0;
+    double value = 0;
+    try {
+        value = std::stod(str, &pos);
+    } catch (...) {
+        pos = 0;
+    }
+    if (pos != str.size()) {
+        std::cerr << "Invalid number: " << s << std::endl;
+        std::exit(-1);
+    }
+    return value;
+}
+#endif
 
 }  // namespace
 
