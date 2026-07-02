@@ -8,47 +8,115 @@
   "include": ["cmake/CommonPresets.json"],
   "configurePresets": [
     {
-      "name": "libonly",
+      "name": "quick",
       "inherits": "multi",
-      "binaryDir": "${sourceDir}/build-libonly",
+      "binaryDir": "${sourceDir}/build-quick",
       "cacheVariables": {
         "LIBSTRATEGY_TESTS": "OFF" ,
         "LIBSTRATEGY_OnlyLibrary": "ON"
       },
-      "displayName": "Configure Library-Only for Debug and Release"
+      "displayName": "Configure quick build (no utilities, no testing) for Debug and Release"
+    },
+    {
+      "name": "quick-san",
+      "inherits": "multi-san",
+      "binaryDir": "${sourceDir}/build-quick-san",
+      "cacheVariables": {
+        "LIBSTRATEGY_TESTS": "OFF" ,
+        "LIBSTRATEGY_OnlyLibrary": "ON"
+      },
+      "displayName": "Configure quick build (no utilities, no testing) with Sanitizers for Debug and Release"
     }
   ],
   "buildPresets": [
     {
-      "name": "libonly-release",
+      "name": "quick-release",
       "inherits": "release",
-      "configurePreset": "libonly",
+      "configurePreset": "quick",
+      "displayName": "Build Library-Only for Release"
+    },
+    {
+      "name": "quick-debug",
+      "inherits": "debug",
+      "configurePreset": "quick",
       "displayName": "Build Library-Only for Debug"
     },
     {
-      "name": "libonly-debug",
+      "name": "quick-san-release",
+      "inherits": "release",
+      "configurePreset": "quick-san",
+      "displayName": "Build Library-Only with Sanitizers for Release"
+    },
+    {
+      "name": "quick-san-debug",
       "inherits": "debug",
-      "configurePreset": "libonly",
-      "displayName": "Build Library-Only for Release"
+      "configurePreset": "quick-san",
+      "displayName": "Build Library-Only with Sanitizers for Debug"
     }
   ],
   "testPresets": [],
   "workflowPresets": [
     {
-      "name": "libonly",
-      "displayName": "Configure and Build Library-Only for Debug and Release (no testing)",
+      "name": "quick",
+      "displayName": "Configure and Build Library-Only (no testing) for Debug and Release",
       "steps": [
         {
           "type": "configure",
-          "name": "libonly"
+          "name": "quick"
         },
         {
           "type": "build",
-          "name": "libonly-release"
+          "name": "quick-release"
         },
         {
           "type": "build",
-          "name": "libonly-debug"
+          "name": "quick-debug"
+        }
+      ]
+    },
+    {
+      "name": "quick-release",
+      "displayName": "Configure and Build Library-Only (no testing) for Release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "quick"
+        },
+        {
+          "type": "build",
+          "name": "quick-release"
+        }
+      ]
+    },
+    {
+      "name": "quick-san",
+      "displayName": "Configure and Build Library-Only (no testing) with Sanitizers for Debug and Release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "quick-san"
+        },
+        {
+          "type": "build",
+          "name": "quick-san-release"
+        },
+        {
+          "type": "build",
+          "name": "quick-san-debug"
+        }
+      ]
+    },
+    {
+      "name": "quick-san-release",
+      "displayName": "Configure and Build Library-Only (no testing) for Release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "quick-san"
+        },
+        {
+          "type": "build",
+          "name": "quick-san-release"
         }
       ]
     }

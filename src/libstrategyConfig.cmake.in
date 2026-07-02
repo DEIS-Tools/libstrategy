@@ -1,0 +1,4 @@
+@PACKAGE_INIT@
+find_dependency(ptrie)
+include("${CMAKE_CURRENT_LIST_DIR}/libstrategyTargets.cmake")
+check_required_components(libstrategy)

@@ -13,22 +13,36 @@ Full project requires:
 
 For Ubuntu 24.04 install build tools and library dependencies:
 ```shell
-sudo apt install cmake ninja-build g++ libboost-program-options-dev libboost-test-dev
+sudo apt install cmake ninja-build g++ 
+sudo apt install libboost-program-options-dev libboost-test-dev  # optional
 ```
 
 For macOS install build tools and library dependencies:
 ```shell
-brew install cmake ninja boost
+brew install cmake ninja gcc
+brew install boost  # optional
 ```
 
 ## Compile and Install
-Run minimal compilation (just the library) with `Debug` and `Release` settings into `build-libonly/lib`:
+Run minimal compilation (just the library) with `Release` settings into `build-quick/lib`:
 ```shell
-cmake --workflow libonly
+cmake --workflow --preset quick-release
 ```
-Install the `Release` build of `build-libonly` into `$PWD/local` path:
+Install the `Release` build of `build-quick` into `$PWD/local` path:
 ```shell
-cmake --install build-libonly --config Release --prefix $PWD/local
+cmake --install build-quick --config Release --prefix $PWD/local
+```
+
+## Example Usage
+Directory [example](example) contains minimal example demonstrating how to use the library.
+
+Test the example with libstrategy installed into [local](local) directory:
+```shell
+cmake -S example -B build-example -DCMAKE_PREFIX_PATH=$PWD/local -DCMAKE_MODULE_PATH=$PWD/cmake
+```
+```shell
+cmake --build build-example
+ctest --test-dir build-example --output-on-failure
 ```
 
 ## Other Presets
@@ -39,7 +53,7 @@ cmake --workflow --list-presets
 
 For example, configure, build and **test** for Development with **Sanitizers** (GCC/Clang/AppleClang):
 ```shell
-cmake --workflow debug-san
+cmake --workflow --preset debug-san
 ```
 
 Other configuration presets:

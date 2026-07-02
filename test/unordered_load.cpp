@@ -15,11 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE UnorderedLoad
-
 #include "SimpleTree.h"
 
-#include <boost/test/unit_test.hpp>
+#include <doctest/doctest.h>
+
+#include <sstream>
+
+TEST_SUITE_BEGIN("unordered_load");
 
 const std::string simple_unordered_strategy =
     "{\"version\":1.0,\"type\":\"state->regressor\",\"representation\":\"map\","
@@ -320,36 +322,38 @@ const std::string unordered_strategy = "{\"version\":1.0,\"type\":\"state->regre
                                        "	}"
                                        "}";
 
-BOOST_AUTO_TEST_CASE(SimpleUnorderedKeyLoad)
+TEST_CASE("simple_unordered_strategy key load")
 {
     auto is = std::istringstream{simple_unordered_strategy};
     auto strategy = SimpleTree::parse(is, false, false, 0);
     double disc[1] = {15.0};
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 11), 2.855407148131672);
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 12), 1.352930166302546);
+    CHECK(strategy.value(disc, nullptr, 11) == 2.855407148131672);
+    CHECK(strategy.value(disc, nullptr, 12) == 1.352930166302546);
 
     disc[0] = 210;
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 11), 1.009248500699941);
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 12), 1.028772620412916);
+    CHECK(strategy.value(disc, nullptr, 11) == 1.009248500699941);
+    CHECK(strategy.value(disc, nullptr, 12) == 1.028772620412916);
 
     disc[0] = 30;
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 11), 1.294636921229531);
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 12), 3.091107032150207);
+    CHECK(strategy.value(disc, nullptr, 11) == 1.294636921229531);
+    CHECK(strategy.value(disc, nullptr, 12) == 3.091107032150207);
 }
 
-BOOST_AUTO_TEST_CASE(UnorderedKeyLoad)
+TEST_CASE("unordered_strategy key load")
 {
     auto is = std::stringstream{unordered_strategy};
     auto strategy = SimpleTree::parse(is, false, false, 0);
     double disc[1] = {15.0};
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 11), 2.855407148131672);
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 12), 1.352930166302546);
+    CHECK(strategy.value(disc, nullptr, 11) == 2.855407148131672);
+    CHECK(strategy.value(disc, nullptr, 12) == 1.352930166302546);
 
     disc[0] = 210;
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 11), 1.009248500699941);
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 12), 1.028772620412916);
+    CHECK(strategy.value(disc, nullptr, 11) == 1.009248500699941);
+    CHECK(strategy.value(disc, nullptr, 12) == 1.028772620412916);
 
     disc[0] = 30;
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 11), 1.294636921229531);
-    BOOST_CHECK_EQUAL(strategy.value(disc, nullptr, 12), 3.091107032150207);
+    CHECK(strategy.value(disc, nullptr, 11) == 1.294636921229531);
+    CHECK(strategy.value(disc, nullptr, 12) == 3.091107032150207);
 }
+
+TEST_SUITE_END();

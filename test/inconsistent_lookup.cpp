@@ -15,43 +15,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE UnorderedLoad
-
 #include "SimpleTree.h"
 
-#include <boost/test/unit_test.hpp>
+#include <doctest/doctest.h>
+
 #include <fstream>
+#include <filesystem>
 
-BOOST_AUTO_TEST_CASE(DirectoryTest) { BOOST_REQUIRE(getenv("STRATEGY_DIR")); }
+TEST_SUITE_BEGIN("Unordered Load");
 
-BOOST_AUTO_TEST_CASE(Inconsistent1)
+namespace fs = std::filesystem;
+
+TEST_CASE("Inconsistent1")
 {
-    std::string strategy = getenv("STRATEGY_DIR");
-    strategy += "/inconsistent1.strategy";
-    std::ifstream in(strategy);
-    auto tree = SimpleTree::parse(in, false, false);
+    const auto strategy_dir = getenv("STRATEGY_DIR");
+    REQUIRE(strategy_dir != nullptr);
+
+    const auto strategy_path = fs::path{strategy_dir} / "inconsistent1.strategy";
+    auto in = std::ifstream{strategy_path};
     double vars[] = {10};
-    auto act18 = tree.value(vars, nullptr, 0);
-    auto act19 = tree.value(vars, nullptr, 1);
-    BOOST_REQUIRE_LT(act18, act19);
+    SUBCASE("Plain")
+    {
+        auto tree = SimpleTree::parse(in, false, false);
+        auto act18 = tree.value(vars, nullptr, 0);
+        auto act19 = tree.value(vars, nullptr, 1);
+        REQUIRE(act18 < act19);
+    }
+    SUBCASE("Simplify")
+    {
+        auto tree = SimpleTree::parse(in, true, false);
+        REQUIRE(tree.value(vars, nullptr, 0) < tree.value(vars, nullptr, 1));
+    }
+    SUBCASE("Simplify Subsumption")
+    {
+        auto tree = SimpleTree::parse(in, true, true);
+        REQUIRE(tree.value(vars, nullptr, 0) < tree.value(vars, nullptr, 1));
+    }
 }
 
-BOOST_AUTO_TEST_CASE(Inconsistent1Simplify)
-{
-    std::string strategy = getenv("STRATEGY_DIR");
-    strategy += "/inconsistent1.strategy";
-    std::ifstream in(strategy);
-    auto tree = SimpleTree::parse(in, true, false);
-    double vars[] = {10};
-    BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));
-}
-
-BOOST_AUTO_TEST_CASE(Inconsistent1SimplifySubsumption)
-{
-    std::string strategy = getenv("STRATEGY_DIR");
-    strategy += "/inconsistent1.strategy";
-    std::ifstream in(strategy);
-    auto tree = SimpleTree::parse(in, true, true);
-    double vars[] = {10};
-    BOOST_REQUIRE_LT(tree.value(vars, nullptr, 0), tree.value(vars, nullptr, 1));
-}
+TEST_SUITE_END();

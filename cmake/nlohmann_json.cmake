@@ -9,6 +9,7 @@ FetchContent_Declare(nlohmann_json
            GIT_SHALLOW TRUE  # download specific revision only (git clone --depth 1)
            GIT_PROGRESS TRUE # show download progress in Ninja
            USES_TERMINAL_DOWNLOAD TRUE
+           EXCLUDE_FROM_ALL # don't build if not used
            FIND_PACKAGE_ARGS 3.12.0)
 
 set(NLOHMANN_JSON_BUILD_MODULES     OFF CACHE BOOL "Build C++ modules support")
@@ -25,11 +26,9 @@ set(JSON_MultipleHeaders            ON  CACHE BOOL "Use non-amalgamated version 
 set(JSON_SystemInclude              OFF CACHE BOOL "Include as system headers (skip for clang-tidy).")
 
 FetchContent_MakeAvailable(nlohmann_json)
-message(STATUS "Got nlohmann_json: ${nlohmann_json_SOURCE_DIR}")
 
 if (nlohmann_json_FOUND) # find_package
-   get_target_property(nlohmann_json_INCLUDE_DIRS nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
-   message(STATUS "Found nlohmann_json: ${nlohmann_json_INCLUDE_DIRS}")
+   message(STATUS "Found nlohmann_json: ${nlohmann_json_DIRS}")
 else (nlohmann_json_FOUND) # FetchContent
    message(STATUS "Fetched nlohmann_json: ${nlohmann_json_SOURCE_DIR}")
 endif (nlohmann_json_FOUND)
